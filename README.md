@@ -281,7 +281,7 @@ The UI is a thin client over these endpoints. Useful for scripting or integratin
 | GET | `/api/commands` | All commands (JSON) |
 | POST | `/api/save` | Create/update a command (JSON body, `id: 0` = new) |
 | POST | `/api/delete` | Delete by `id` |
-| POST | `/api/run` | Run a command by `id` |
+| GET / POST | `/api/run?id=N` | Run a command by `id` (the web UI shows a copyable link under each command, for HTTP Shortcuts) |
 | POST | `/api/clear` | Delete all commands |
 | POST | `/api/say` | Simulate a spoken sentence: `text=...` |
 | GET/POST | `/api/relay` | `?n=1&s=on\|off\|toggle` (no `s` returns state) |

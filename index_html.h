@@ -68,6 +68,9 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .step{display:flex;gap:6px;align-items:flex-start}
 .step select{width:90px;flex-shrink:0}
 .step .btn{padding:10px 12px}
+.cmd-link{display:flex;align-items:center;gap:6px;margin-top:8px;min-width:0}
+.cmd-link input{margin:0;direction:ltr;flex:1;min-width:0;font-size:12px;font-family:monospace;color:var(--mute);background:var(--chip);border:1px solid var(--line,transparent);border-radius:8px;padding:6px 8px}
+.cmd-link .btn{padding:6px 10px;font-size:13px;flex:none}
 .phrases{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
 .ph{font-size:12px;background:var(--chip);padding:2px 8px;border-radius:99px}
 .step select.irsel{width:auto;flex:1;min-width:0}
@@ -409,6 +412,13 @@ function renderCommands() {
         meta.appendChild(el('code', '', fv + ((c.steps.length > 1) ? ' …' : '')));
       }
       main.appendChild(meta);
+      const lk = el('div', 'cmd-link');
+      const url = location.origin + '/api/run?id=' + c.id;
+      const inp = el('input'); inp.type = 'text'; inp.readOnly = true; inp.value = url;
+      inp.onfocus = () => inp.select();
+      const cp = el('button', 'btn ghost', '📋 نسخ'); cp.onclick = () => copyText(url);
+      lk.appendChild(inp); lk.appendChild(cp);
+      main.appendChild(lk);
       const acts = el('div', 'cmd-actions');
       const run = el('button', 'btn run', '▶'); run.onclick = () => runCmd(c.id, c.name, run);
       const ed = el('button', 'btn ghost', '✎'); ed.onclick = () => editCmd(c.id);
@@ -683,6 +693,13 @@ function togglePause() {
   $('#pauseBtn').textContent = paused ? '▶ استئناف' : '⏸ إيقاف';
 }
 function clearTerm() { $('#term').textContent = ''; logLines.length = 0; post('/api/log/clear').catch(() => {}); }
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); toast('تم نسخ الرابط'); return; } catch (e) {}
+  const ta = el('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove(); toast(ok ? 'تم نسخ الرابط' : 'انسخ الرابط يدويًا', !ok);
+}
 async function copyLog() {
   try { await navigator.clipboard.writeText(logLines.join('\n')); toast('تم النسخ'); }
   catch (e) {

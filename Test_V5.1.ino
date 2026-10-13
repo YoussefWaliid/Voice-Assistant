@@ -1049,7 +1049,8 @@ void setup() {
     server.send(200, "text/plain", "OK");
   });
 
-  server.on("/api/run", HTTP_POST, []() {
+  // يشتغل GET و POST عشان HTTP Shortcuts: /api/run?id=N
+  server.on("/api/run", HTTP_ANY, []() {
     int id = server.arg("id").toInt();
     DynamicJsonDocument doc(CMD_DOC_SIZE);
     if (!loadCmds(doc)) { server.send(404, "text/plain", "NOT FOUND"); return; }
