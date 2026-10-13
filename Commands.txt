@@ -1,0 +1,5 @@
+http://192.168.1.15/update >>OTA update
+admin 12345678 >>> Test_V4.2.ino.bin upload only this file
+http://192.168.1.15/api/relay?n=1&s=toggle >>toggle relay 1
+http://192.168.1.15/api/relay?n=1&s=on     >>turn on relay 1
+http://192.168.1.15/api/relay?n=1&s=off    >>turn on relay 2
