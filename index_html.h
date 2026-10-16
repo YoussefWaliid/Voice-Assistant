@@ -9,6 +9,13 @@ const char index_html[] PROGMEM = R"rawliteral(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Voice Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Voice Hub</title>
 <script>(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;})();</script>
 <style>
@@ -56,7 +63,7 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .tools .btn{padding:7px 11px;font-size:13px}
 .tools label{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:5px;margin-inline-start:auto}
 .tools input{width:auto;margin:0}
-#term{direction:ltr;text-align:left;background:var(--term);color:var(--termtx);border-radius:10px;padding:10px;height:340px;overflow-y:auto;font:12.5px/1.55 ui-monospace,Consolas,Menlo,monospace}
+#term{direction:ltr;text-align:left;background:var(--term);color:var(--termtx);border-radius:10px;padding:10px;height:min(340px,50vh);overflow-y:auto;font:12.5px/1.55 ui-monospace,Consolas,Menlo,monospace}
 #term div{white-space:pre-wrap;word-break:break-all}
 #term .t{color:#475569;margin-right:8px}
 #term .err{color:#f87171}#term .ok{color:#4ade80}#term .wake{color:#22d3ee}#term .proc{color:#c084fc}#term .sys{color:#fbbf24}
@@ -79,12 +86,64 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .irrow{display:flex;gap:8px}.irrow>*{flex:1}
 .step .sv{display:flex;gap:6px;flex:1;min-width:0}.step .sv select{width:auto;flex:1;min-width:0}
 .step .dl{display:flex;gap:6px;flex:1;min-width:0;align-items:center}.step .dl span{color:var(--mute);font-size:13px;white-space:nowrap;margin-bottom:10px}
+.panel.sl{animation:slin .22s ease}
+@keyframes slin{from{opacity:0;transform:translateX(var(--sx,30px))}to{opacity:1;transform:none}}
+/* ---- تاب المشترك (شكل عصري) ---- */
+#tab-strip{--g:#16a34a;--gs:rgba(22,163,74,.10);--mono:ui-monospace,Consolas,'SFMono-Regular',monospace}
+:root[data-theme="dark"] #tab-strip{--g:#4ade80;--gs:rgba(74,222,128,.08)}
+.hero,.scard{background:var(--card);border:1px solid var(--line);border-radius:24px}
+.hero{overflow:hidden;margin-bottom:14px}
+.hero .top{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px 14px;gap:10px}
+.hero .lbl{color:var(--mute);font-size:14px}
+.hero .big{font-family:var(--mono);font-size:48px;font-weight:800;color:var(--g);direction:ltr;line-height:1.1;margin-top:6px;text-align:left}
+.hero .big small{font-size:18px;color:var(--mute);font-weight:500;margin-inline-start:6px}
+.lv{display:flex;align-items:center;gap:8px;font:700 13px var(--mono);letter-spacing:.12em;color:var(--g);direction:ltr}
+.lv i{width:11px;height:11px;border-radius:50%;background:var(--g);box-shadow:0 0 0 4px var(--gs);animation:lvp 1.6s infinite}
+.lv.off{color:var(--mute)}.lv.off i{background:var(--mute);box-shadow:none;animation:none}
+@keyframes lvp{50%{box-shadow:0 0 0 8px transparent}}
+.hstats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.hstats>div{padding:12px 16px;border-inline-start:1px solid var(--line);min-width:0}
+.hstats>div:first-child{border-inline-start:0}
+.hstats b{display:block;font:700 19px var(--mono);direction:ltr;text-align:start}
+.hstats span{font-size:12px;color:var(--mute)}
+.scard{padding:18px}
+.shead{display:flex;align-items:center;gap:10px}
+.shead h3{margin:0;font-size:20px}
+.shead .d{width:11px;height:11px;border-radius:50%;background:var(--mute)}
+.scard.on .shead .d{background:var(--g);box-shadow:0 0 10px var(--g)}
+.pill{border:1px solid var(--g);color:var(--g);border-radius:99px;padding:3px 12px;font-size:13px;font-weight:700}
+.pill.off{border-color:var(--line);color:var(--mute)}
+.gear{margin-inline-start:auto;background:none;border:0;color:var(--mute);font-size:22px;cursor:pointer;padding:4px 8px}
+.ssum{font-family:var(--mono);color:var(--g);direction:ltr;text-align:left;margin:14px 2px 16px;font-size:15px}
+.stg{position:relative}
+.sgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;direction:ltr}
+.tile{position:relative;display:flex;flex-direction:column;gap:3px;padding:14px;min-height:150px;border:1.5px solid var(--line);border-radius:22px;background:var(--bg);cursor:pointer;user-select:none;transition:.2s;-webkit-tap-highlight-color:transparent}
+.tile.on{border-color:var(--g);background:var(--gs)}
+.tile.dis{opacity:.55;cursor:not-allowed}
+.tile.bad{border-color:var(--bad)}
+.tile:active:not(.dis){transform:scale(.97)}
+.tile:nth-child(even){align-items:flex-end;text-align:right}
+.tile:nth-child(odd){align-items:flex-start;text-align:left}
+.tile .pg{width:50px;height:50px;color:var(--mute);margin-bottom:auto;transition:.2s}
+.tile.on .pg{color:var(--g)}
+.tile .nm{font-size:16px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:rtl;margin-top:10px}
+.tile .w{font:700 17px var(--mono);color:var(--mute);direction:ltr}
+.tile.on .w{color:var(--g)}
+.tile .sub{font:12px var(--mono);color:var(--mute);direction:ltr}
+.tile .ed{position:absolute;top:10px;background:none;border:0;color:var(--mute);font-size:14px;cursor:pointer;padding:4px}
+.tile:nth-child(odd) .ed{right:8px}.tile:nth-child(even) .ed{left:8px}
+.tile .wn{position:absolute;bottom:10px;font-size:14px}
+.tile:nth-child(odd) .wn{right:10px}.tile:nth-child(even) .wn{left:10px}
+.hub{position:absolute;top:50%;left:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--mute);box-shadow:0 0 0 7px var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;z-index:2}
+.hub.on{color:var(--g);border-color:var(--g);box-shadow:0 0 0 7px var(--card),0 0 18px var(--gs)}
+.hub:disabled{opacity:.5;cursor:not-allowed}
+.sdet{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .so{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}
 .so.on{border-color:var(--ok);box-shadow:0 0 0 2px rgba(22,163,74,.15)}
 .so h3{margin:0 0 6px;font-size:14px;display:flex;justify-content:space-between;align-items:center}
 .so .m{font-size:12px;color:var(--mute);margin-bottom:8px;direction:ltr;text-align:left}
-.so .btn{width:100%;padding:8px}
+.so .btn{width:100%;padding:11px}
 .so.bad{border-color:var(--bad)}
 .sinfo{font-size:13px;color:var(--mute);line-height:1.8;direction:ltr;text-align:left}
 #toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,30px);background:#0f172a;color:#fff;padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:.25s;font-size:14px;z-index:9}
@@ -105,13 +164,30 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .cmv .btn{padding:3px 9px;font-size:12px}
 .cmv .btn:disabled{opacity:.35;cursor:default}
 .catbody .cmd:last-child{margin-bottom:0}
+.tabs{position:sticky;top:6px;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+@media(min-width:900px){.wrap{max-width:860px}}
+.badge.ok{background:rgba(22,163,74,.15);color:var(--ok)}
+.badge.bad{background:rgba(220,38,38,.15);color:var(--bad)}
+.srch{display:flex;gap:6px;margin-bottom:14px}.srch input{margin:0;flex:1}.srch .btn{padding:8px 12px;flex:none}
+.cmd-name.tg{cursor:pointer}
+.cmd-name .chev{color:var(--mute);font-size:12px;margin-inline-start:6px}
+.stl{margin:8px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stp{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:13px}
+.stp+.stp{border-top:1px solid var(--line)}
+.stp .n{flex:none;width:20px;height:20px;border-radius:50%;background:var(--chip);color:var(--pri);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.stp .ty{flex:none;min-width:54px;text-align:center;font-size:11px;font-weight:700;background:var(--chip);color:var(--pri);border-radius:6px;padding:2px 6px}
+.stp .v{flex:1;min-width:0;text-align:right;word-break:break-all;font-size:12.5px}
+.so h3 .nm{cursor:pointer}
+.so h3 .nm small{color:var(--mute)}
+.tools select{width:auto;margin:0;padding:7px 9px;font-size:13px}
+.tools input[type=search]{width:auto;flex:1;min-width:120px;margin:0;padding:7px 10px;font-size:13px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>🎙️ Voice Hub</h1>
-    <div class="hr"><div class="live"><span class="dot" id="dot"></span><span id="ip">--</span></div><button class="btn ghost thm" id="themeBtn" onclick="toggleTheme()" title="تغيير الثيم">🌙</button></div>
+    <div class="hr"><div class="live"><span class="dot" id="dot"></span><span id="ip">--</span></div><button class="btn ghost thm" id="instBtn" onclick="installApp()" hidden title="تثبيت كتطبيق">📲</button><button class="btn ghost thm" id="themeBtn" onclick="toggleTheme()" title="تغيير الثيم">🌙</button></div>
   </header>
 
   <div class="tabs">
@@ -122,7 +198,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
   </div>
 
   <section class="panel" id="tab-cmds">
-    <div class="card" id="form-card">
+    <div class="card" id="form-card" data-cl="form:0">
       <h2><span id="form-title">إضافة أمر جديد</span><button class="btn ghost" id="cancelBtn" onclick="resetForm()" hidden>إلغاء التعديل</button></h2>
       <input type="text" id="name" placeholder="اسم الأمر (مثال: نور السقف)">
       <input type="text" id="cat" list="cats" placeholder="التصنيف (مثال: إضاءة) - اختياري">
@@ -144,6 +220,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       </div>
     </div>
 
+    <div class="srch"><input type="search" id="q" dir="auto" placeholder="🔍 ابحث في الأوامر والجمل والتصنيفات..." oninput="renderCommands()"><button class="btn ghost" onclick="setAllCats(true)" title="فتح الكل">⇊</button><button class="btn ghost" onclick="setAllCats(false)" title="قفل الكل">⇈</button></div>
     <div id="groups"></div>
 
     <div class="card">
@@ -153,24 +230,41 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
   </section>
 
   <section class="panel" id="tab-strip" hidden>
-    <div class="card">
-      <h2>حالة المشترك <span class="badge" id="st-badge">غير متصل</span></h2>
-      <div class="sinfo" id="st-info">--</div>
-      <div class="sinfo" style="margin-top:8px">لإضافة/إعادة ربط المشترك: من تطبيق MTTL Control &gt; Device setup اكتب IP الجهاز ده: <b id="st-ip">--</b> (بورت 10086)</div>
-    </div>
-    <div class="card">
-      <h2>المخارج</h2>
-      <div class="sgrid" id="st-grid"></div>
-      <div class="irrow" style="margin-top:10px">
-        <button class="btn run" onclick="stripSet(0,'on')">تشغيل الكل</button>
-        <button class="btn danger" onclick="stripSet(0,'off')">إطفاء الكل</button>
+    <div class="hero">
+      <div class="top">
+        <div>
+          <div class="lbl" id="st-lbl">الاستهلاك الآن</div>
+          <div class="big"><span id="st-w">0.0</span><small>W</small></div>
+        </div>
+        <div class="lv off" id="st-live"><i></i><span id="st-livetx">OFFLINE</span></div>
       </div>
-      <button class="btn ghost full" style="margin-top:10px" onclick="stripRefresh()">تحديث القراءات</button>
+      <div class="hstats">
+        <div><b id="st-cnt">0/4</b><span>مخارج شغالة</span></div>
+        <div><b id="st-kwh">0.000</b><span>kWh إجمالي</span></div>
+        <div><b id="st-age">--</b><span>آخر قراءة</span></div>
+      </div>
+    </div>
+
+    <div class="scard" id="st-card">
+      <div class="shead">
+        <span class="d"></span><h3>المشترك</h3><span class="pill off" id="st-badge">غير متصل</span>
+        <button class="gear" onclick="$('#st-det').hidden=!$('#st-det').hidden" title="تفاصيل">⚙</button>
+      </div>
+      <div class="ssum" id="st-sum">-- W</div>
+      <div class="stg">
+        <div class="sgrid2" id="st-grid"></div>
+        <button class="hub" id="st-hub" onclick="stripHub()" title="تشغيل/إطفاء الكل"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 7.2a8 8 0 1 0 11.4 0"/></svg></button>
+      </div>
+      <div class="sdet" id="st-det" hidden>
+        <div class="sinfo" id="st-info">--</div>
+        <div class="sinfo" style="margin-top:8px;direction:rtl;text-align:right">لإضافة/إعادة ربط المشترك: من تطبيق MTTL Control &gt; Device setup اكتب IP الجهاز ده: <b id="st-ip">--</b> (بورت 10086)</div>
+        <button class="btn ghost full" style="margin-top:10px" onclick="stripRefresh()">تحديث القراءات</button>
+      </div>
     </div>
   </section>
 
   <section class="panel" id="tab-ir" hidden>
-    <div class="card">
+    <div class="card" data-cl="irpins:0">
       <h2>أطراف الـ IR (GPIO)</h2>
       <label class="lbl">المرسل (IR LED) - TX</label>
       <select id="irtx"></select>
@@ -179,7 +273,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       <button class="btn full" onclick="saveIrCfg()">حفظ الأطراف</button>
     </div>
 
-    <div class="card">
+    <div class="card" data-cl="learn:1">
       <h2>تعلّم إشارة جديدة</h2>
       <button class="btn full" id="learnBtn" onclick="startLearn()">🎯 ابدأ التعلم</button>
       <div class="irstat" id="irstat"></div>
@@ -196,19 +290,25 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" data-cl="irsaved:1">
       <h2>الإشارات المحفوظة <span class="badge" id="ir-count">0</span></h2>
+      <input type="search" id="irq" dir="auto" placeholder="🔍 بحث في الإشارات" oninput="renderIr()" hidden>
       <div id="irlist"></div>
     </div>
   </section>
 
   <section class="panel" id="tab-maint" hidden>
-    <div class="card">
+    <div class="card" data-cl="pwa:0">
+      <h2>تثبيت كتطبيق <span class="badge" id="pwa-badge">--</span></h2>
+      <div class="sinfo" id="pwa-info" style="direction:rtl;text-align:right">--</div>
+      <button class="btn full" id="pwa-btn" style="margin-top:10px" onclick="installApp()" hidden>📲 تثبيت التطبيق</button>
+    </div>
+    <div class="card" data-cl="m_info:1">
       <h2>حالة الجهاز</h2>
       <div class="info" id="info"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-cl="m_mic:0">
       <h2>الميكروفون</h2>
       <label class="lbl">تكبير كلمة التنبيه (wake word) - زوّده لو مش بيسمعك من بعيد (2 - 128)</label>
       <input type="number" id="micg" min="2" max="128" step="2" dir="ltr">
@@ -218,7 +318,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       <div class="sinfo" id="micinfo" style="margin-top:10px">--</div>
     </div>
 
-    <div class="card">
+    <div class="card" data-cl="m_log:1">
       <h2>Serial Monitor</h2>
       <div class="tools">
         <button class="btn ghost" id="pauseBtn" onclick="togglePause()">⏸ إيقاف</button>
@@ -227,6 +327,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
         <button class="btn ghost" onclick="downloadLog()">⬇ تحميل</button>
         <label><input type="checkbox" id="autoscroll" checked> تمرير تلقائي</label>
       </div>
+      <div class="tools"><input type="search" id="logq" dir="auto" placeholder="🔍 فلتر السجل..." oninput="applyLogFilter()"><select id="logLvl" onchange="applyLogFilter()"><option value="">الكل</option><option value="err">أخطاء</option><option value="ok">نجاح</option><option value="wake">كلمة التنبيه</option></select></div>
       <div id="term"></div>
       <div class="send">
         <input type="text" id="say" dir="auto" placeholder="جرّب أمر نصي بدل الكلام (مثال: turn on ring light)" onkeydown="if(event.key==='Enter')sendSay()">
@@ -234,7 +335,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" data-cl="m_bk:0">
       <h2>نسخة احتياطية للأوامر</h2>
       <div class="bk">
         <button class="btn ghost" onclick="exportCmds()">⬇ تصدير (JSON)</button>
@@ -244,7 +345,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       <div class="sinfo">التصدير بيحفظ كل الأوامر (الجمل + الخطوات + الترتيب) في ملف على جهازك. وبيحفظ كمان الإشارات الـ IR المتعلَّمة، وبيتعاد ربطها بالأوامر تلقائي وقت الاستيراد.</div>
     </div>
 
-    <div class="card">
+    <div class="card" data-cl="m_tools:0">
       <h2>أدوات</h2>
       <button class="btn danger full" onclick="reboot()">🔄 إعادة تشغيل الجهاز</button>
     </div>
@@ -276,8 +377,31 @@ function toggleTheme() {
   applyTheme(t);
 }
 
+/* ---------- collapsible cards ---------- */
+const CARDS = {};
+function makeCollapsible(card, key, def) {
+  const h = card.querySelector(':scope > h2'); if (!h) return;
+  const body = el('div', 'cbody');
+  [...card.children].forEach(c => { if (c !== h) body.appendChild(c); });
+  card.appendChild(body);
+  const left = el('span', 'catt'), arrow = el('span', 'carr');
+  [...h.childNodes].forEach(n => { if (!(n.nodeType === 1 && n.classList.contains('btn'))) left.appendChild(n); });
+  left.prepend(arrow); h.prepend(left); h.classList.add('cath');
+  const set = (open, save) => {
+    body.hidden = !open; arrow.textContent = open ? '▾' : '◂'; h.style.marginBottom = open ? '' : '0';
+    if (save) { const o = lsGet('cardOpen', {}); o[key] = open ? 1 : 0; lsSet('cardOpen', o); }
+  };
+  const st = lsGet('cardOpen', {});
+  set(key in st ? !!st[key] : !!def, false);
+  h.onclick = e => { if (e.target.closest('.btn')) return; set(body.hidden, true); };
+  CARDS[key] = open => set(open, false);
+}
+function initCards() { document.querySelectorAll('[data-cl]').forEach(c => { const [k, d] = c.dataset.cl.split(':'); makeCollapsible(c, k, d === '1'); }); }
+function openForm() { if (CARDS.form) CARDS.form(true); }
+
 /* ---------- tabs ---------- */
 function showTab(name) {
+  const ord = [...document.querySelectorAll('.tab')].map(b => b.dataset.tab), pa = document.querySelector('.tab.active'), prev = pa ? pa.dataset.tab : null;
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== 'tab-' + name);
   if (name === 'ir') { loadIrCfg(); loadIrList(); }
@@ -285,7 +409,35 @@ function showTab(name) {
   if (name === 'cmds' && !$('#heardBody').hidden) loadHeard();
   if (name === 'maint') loadMic();
   if (name === 'maint') { startLog(); loadInfo(); } else stopLog();
+  const pn = $('#tab-' + name);
+  if (prev && prev !== name) { pn.style.setProperty('--sx', (ord.indexOf(name) > ord.indexOf(prev) ? -30 : 30) + 'px'); pn.classList.remove('sl'); void pn.offsetWidth; pn.classList.add('sl'); }
+  const at = document.querySelector('.tab.active'); if (at && at.scrollIntoView) at.scrollIntoView({inline: 'center', block: 'nearest'});
 }
+
+/* ---------- سوايب بين التابات (RTL: سحب لليسار = التاب اللي بعده) ---------- */
+(function () {
+  let sx = 0, sy = 0, st = 0, ok = false;
+  document.addEventListener('touchstart', e => {
+    ok = false; if (e.touches.length !== 1) return;
+    const t = e.touches[0], tg = e.target;
+    if (t.clientX < 24 || t.clientX > innerWidth - 24) return;           // حواف الشاشة = إيماءة الرجوع
+    if (tg.closest('input,textarea,select,.tabs,pre')) return;
+    for (let n = tg; n && n !== document.body; n = n.parentElement) {     // عناصر بتتحرك أفقي
+      if (n.scrollWidth > n.clientWidth + 4) { const o = getComputedStyle(n).overflowX; if (o === 'auto' || o === 'scroll') return; }
+    }
+    sx = t.clientX; sy = t.clientY; st = Date.now(); ok = true;
+  }, {passive: true});
+  document.addEventListener('touchend', e => {
+    if (!ok) return; ok = false;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if (Date.now() - st > 700 || Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.5) return;
+    if (String(getSelection()).length) return;
+    const ord = [...document.querySelectorAll('.tab')].map(b => b.dataset.tab), a = document.querySelector('.tab.active');
+    const i = a ? ord.indexOf(a.dataset.tab) : -1; if (i < 0) return;
+    const j = dx < 0 ? i + 1 : i - 1;
+    if (j >= 0 && j < ord.length) showTab(ord[j]);
+  }, {passive: true});
+})();
 
 /* ---------- commands ---------- */
 let cmds = [], editId = 0, irList = [], learnT = null;
@@ -309,7 +461,7 @@ function addStep(type, val) {
   const irs = el('select', 'irsel'); fillIrSel(irs, type === 'ir' ? val : undefined);
   // مشترك: مخرج + حالة
   const sv = el('div', 'sv');
-  const sn = el('select', 'sn'); [['0', 'كل المخارج'], ['1', 'مخرج 1'], ['2', 'مخرج 2'], ['3', 'مخرج 3'], ['4', 'مخرج 4']].forEach(([v, t]) => { const o = el('option', '', t); o.value = v; sn.appendChild(o); });
+  const sn = el('select', 'sn'); [['0', 'كل المخارج'], ['1', outName(0)], ['2', outName(1)], ['3', outName(2)], ['4', outName(3)]].forEach(([v, t]) => { const o = el('option', '', t); o.value = v; sn.appendChild(o); });
   const sa = el('select', 'sa'); [['on', 'تشغيل'], ['off', 'إطفاء'], ['toggle', 'تبديل']].forEach(([v, t]) => { const o = el('option', '', t); o.value = v; sa.appendChild(o); });
   sv.appendChild(sn); sv.appendChild(sa);
   // تأخير: ثواني
@@ -374,7 +526,7 @@ function stepVal(r) {
 function stepLabel(s) {
   if (s.type === 'ir') return 'IR: ' + ((irList.find(i => String(i.id) === String(s.val)) || {}).name || '؟');
   if (s.type === 'delay') return '⏱ ' + s.val + ' ث';
-  if (s.type === 'strip') { const [n, a] = String(s.val).split(':'); return 'مشترك ' + (n === '0' ? 'الكل' : n) + ': ' + ({on: 'تشغيل', off: 'إطفاء', toggle: 'تبديل'}[a] || a); }
+  if (s.type === 'strip') { const [n, a] = String(s.val).split(':'); return 'مشترك ' + (n === '0' ? 'الكل' : outName(+n - 1)) + ': ' + ({on: 'تشغيل', off: 'إطفاء', toggle: 'تبديل'}[a] || a); }
   return s.val;
 }
 
@@ -388,7 +540,7 @@ function resetForm() {
 
 function editCmd(id) {
   const c = cmds.find(x => x.id === id); if (!c) return;
-  editId = id;
+  editId = id; openForm();
   $('#name').value = c.name; $('#cat').value = c.cat || '';
   $('#phrases').value = (c.phrases || []).join('\n');
   $('#steps').textContent = '';
@@ -403,7 +555,7 @@ async function loadCommands() {
   try {
     const r = await (await fetch('/api/commands', {cache: 'no-store'})).json();
     cmds = Array.isArray(r) ? r : [];
-    renderCommands();
+    renderCommands(); renderIr();
   } catch (e) { toast('تعذر تحميل الأوامر', true); }
 }
 
@@ -414,22 +566,24 @@ function renderCommands() {
   const saved = lsGet('catOrder', []);
   const cats = [...saved.filter(c => found.includes(c)), ...found.filter(c => !saved.includes(c))];
   const openCats = lsGet('catOpen', []);
+  const q = ($('#q').value || '').trim().toLowerCase();
   const dl = $('#cats'); dl.textContent = '';
   cats.forEach(c => { const o = el('option'); o.value = c; dl.appendChild(o); });
   if (!cmds.length) {
     const card = el('div', 'card'); card.appendChild(el('div', 'empty', 'لا توجد أوامر محفوظة بعد')); box.appendChild(card); return;
   }
   cats.forEach((cat, idx) => {
-    const list = cmds.filter(c => (c.cat || 'عام') === cat);
+    let list = cmds.filter(c => (c.cat || 'عام') === cat);
+    if (q) { list = list.filter(c => (cat + ' ' + c.name + ' ' + (c.phrases || []).join(' ')).toLowerCase().includes(q)); if (!list.length) return; }
     const card = el('div', 'card');
-    const open = openCats.includes(cat);
+    const open = !!q || openCats.includes(cat);
     const h = el('h2', 'cath');
     const left = el('span', 'catt');
     const arrow = el('span', 'carr', open ? '▾' : '◂');
     left.appendChild(arrow); left.appendChild(el('span', '', cat)); left.appendChild(el('span', 'badge', list.length));
     const mvb = el('span', 'cmv');
-    const up = el('button', 'btn ghost', '▲'); up.title = 'تحريك لفوق'; up.disabled = idx === 0;
-    const dn = el('button', 'btn ghost', '▼'); dn.title = 'تحريك لتحت'; dn.disabled = idx === cats.length - 1;
+    const up = el('button', 'btn ghost', '▲'); up.title = 'تحريك لفوق'; up.disabled = idx === 0 || !!q;
+    const dn = el('button', 'btn ghost', '▼'); dn.title = 'تحريك لتحت'; dn.disabled = idx === cats.length - 1 || !!q;
     up.onclick = e => { e.stopPropagation(); moveCat(cats, idx, -1); };
     dn.onclick = e => { e.stopPropagation(); moveCat(cats, idx, 1); };
     mvb.appendChild(up); mvb.appendChild(dn);
@@ -437,6 +591,7 @@ function renderCommands() {
     card.appendChild(h);
     const body = el('div', 'catbody'); body.hidden = !open; h.style.marginBottom = open ? '' : '0';
     h.onclick = () => {
+      if (q) return;
       const o = lsGet('catOpen', []), k = o.indexOf(cat), now = k < 0;
       if (now) o.push(cat); else o.splice(k, 1);
       lsSet('catOpen', o);
@@ -447,17 +602,26 @@ function renderCommands() {
       const row = el('div', 'cmd');
       const main = el('div', 'cmd-main');
       main.appendChild(el('div', 'cmd-name', c.name));
+      const meta = el('div', 'cmd-meta');
+      meta.appendChild(el('span', 'badge', (c.steps || []).length + ' خطوة'));
+      meta.appendChild(el('span', 'badge', (c.phrases || []).length + ' جملة'));
+      main.appendChild(meta);
       const ph = el('div', 'phrases');
       (c.phrases || []).forEach(p => ph.appendChild(el('span', 'ph', p)));
       main.appendChild(ph);
-      const meta = el('div', 'cmd-meta');
-      meta.appendChild(el('span', 'badge', (c.steps || []).length + ' خطوة'));
-      const first = (c.steps || [])[0];
-      if (first) {
-        const fv = stepLabel(first);
-        meta.appendChild(el('code', '', fv + ((c.steps.length > 1) ? ' …' : '')));
-      }
-      main.appendChild(meta);
+      const stl = el('div', 'stl');
+      (c.steps || []).forEach((st, k) => {
+        const TY = {http: 'HTTP', wol: 'WOL', ir: 'IR', strip: 'مشترك', delay: 'تأخير', relay: 'RELAY'};
+        let v = String(st.val);
+        if (st.type === 'ir') v = (irList.find(i => String(i.id) === v) || {}).name || '؟';
+        else if (st.type === 'delay') v = v + ' ثانية';
+        else if (st.type === 'strip') { const [n, a] = v.split(':'); v = (n === '0' ? 'كل المخارج' : outName(+n - 1)) + ' ← ' + ({on: 'تشغيل', off: 'إطفاء', toggle: 'تبديل'}[a] || a); }
+        const r = el('div', 'stp');
+        const vv = el('span', 'v', v); vv.dir = 'auto';
+        r.appendChild(el('span', 'n', k + 1)); r.appendChild(el('span', 'ty', TY[st.type] || st.type)); r.appendChild(vv);
+        stl.appendChild(r);
+      });
+      main.appendChild(stl);
       const lk = el('div', 'cmd-link');
       const url = location.origin + '/api/run?id=' + c.id;
       const inp = el('input'); inp.type = 'text'; inp.readOnly = true; inp.value = url;
@@ -475,6 +639,11 @@ function renderCommands() {
     });
     box.appendChild(card);
   });
+  if (q && !box.children.length) { const card = el('div', 'card'); card.appendChild(el('div', 'empty', 'لا نتائج للبحث')); box.appendChild(card); }
+}
+function setAllCats(open) {
+  const f = [...new Set(cmds.map(c => c.cat || 'عام'))];
+  lsSet('catOpen', open ? f : []); renderCommands();
 }
 function moveCat(cats, i, d) {
   const j = i + d; if (j < 0 || j >= cats.length) return;
@@ -532,7 +701,7 @@ async function loadHeard() {
       const main = el('div', 'cmd-main'); main.appendChild(el('div', 'cmd-name', (h.ok ? '✔ ' : '✖ ') + h.t));
       const acts = el('div', 'cmd-actions');
       const add = el('button', 'btn ghost', '＋');
-      add.onclick = () => { const ta = $('#phrases'); ta.value = (ta.value ? ta.value.replace(/\n*$/, '') + '\n' : '') + h.t; toast('اتضافت لخانة الجمل'); window.scrollTo({top: 0, behavior: 'smooth'}); };
+      add.onclick = () => { openForm(); const ta = $('#phrases'); ta.value = (ta.value ? ta.value.replace(/\n*$/, '') + '\n' : '') + h.t; toast('اتضافت لخانة الجمل'); window.scrollTo({top: 0, behavior: 'smooth'}); };
       acts.appendChild(add); row.appendChild(main); row.appendChild(acts); box.appendChild(row);
     });
   } catch (e) {}
@@ -567,24 +736,56 @@ async function saveMic() {
 setInterval(() => { if (!$('#tab-maint').hidden) loadMic(); if (!$('#tab-cmds').hidden && !$('#heardBody').hidden) loadHeard(); }, 2500);
 
 /* ---------- المشترك ---------- */
+let learnEnd = 0;
 let stripT = null;
+const outNames = () => lsGet('outNames', {});
+const outName = i => outNames()[i] || ('مخرج ' + (i + 1));
+function renameOut(i) {
+  const v = prompt('اسم المخرج ' + (i + 1) + ':', outName(i)); if (v === null) return;
+  const o = outNames(); if (v.trim()) o[i] = v.trim(); else delete o[i];
+  lsSet('outNames', o); stripStatus();
+}
 function startStrip() { stripStatus(); clearInterval(stripT); stripT = setInterval(stripStatus, 2000); }
 function stopStrip() { clearInterval(stripT); stripT = null; }
+const PLUG = '<svg class="pg" viewBox="0 0 52 52"><circle cx="26" cy="26" r="23" fill="none" stroke="currentColor" stroke-width="3"/><rect x="17" y="19" width="5" height="12" rx="2.5" fill="currentColor"/><rect x="30" y="19" width="5" height="12" rx="2.5" fill="currentColor"/></svg>';
+let stripBuilt = false, stripLast = null;
+function buildStrip() {
+  const g = $('#st-grid'); g.textContent = '';
+  for (let i = 0; i < 4; i++) {
+    const t = el('div', 'tile dis'); t.id = 'so' + i;
+    t.innerHTML = PLUG + '<div class="nm"></div><div class="w"></div><div class="sub"></div><span class="wn" hidden>⚠</span>';
+    const ed = el('button', 'ed', '✎'); ed.title = 'تغيير الاسم'; ed.onclick = e => { e.stopPropagation(); renameOut(i); };
+    t.appendChild(ed);
+    t.onclick = () => { if (!t.classList.contains('dis')) stripSet(i + 1, t.classList.contains('on') ? 'off' : 'on'); };
+    g.appendChild(t);
+  }
+  stripBuilt = true;
+}
+function stripHub() { if (!stripLast || !stripLast.on) return; stripSet(0, stripLast.o.some(o => o.on) ? 'off' : 'on'); }
 async function stripStatus() {
   try {
     const s = await (await fetch('/api/strip/status', {cache: 'no-store'})).json();
+    if (!stripBuilt) buildStrip();
+    stripLast = s;
     $('#st-ip').textContent = s.ip;
-    $('#st-badge').textContent = s.on ? 'متصل' : 'غير متصل';
+    const stale = s.on && s.age > 30;
+    $('#st-live').className = 'lv' + (s.on && !stale ? '' : ' off'); $('#st-livetx').textContent = s.on ? (stale ? 'STALE' : 'LIVE') : 'OFFLINE';
+    $('#st-badge').textContent = s.on ? 'متصل' : 'غير متصل'; $('#st-badge').className = 'pill' + (s.on ? '' : ' off');
+    $('#st-card').classList.toggle('on', !!s.on);
     $('#st-info').textContent = s.on ? ('MAC ' + s.mac + ' | FW ' + s.fw + ' | آخر قراءة: ' + (s.age < 0 ? '--' : s.age + ' ث')) : 'مستني اتصال المشترك على ' + s.ip + ':' + s.port;
-    const g = $('#st-grid'); g.textContent = '';
+    const tw = s.o.reduce((a, o) => a + o.w, 0), twh = s.o.reduce((a, o) => a + o.wh, 0), cnt = s.o.filter(o => o.on).length;
+    $('#st-w').textContent = tw.toFixed(1);
+    $('#st-lbl').textContent = 'الاستهلاك الآن' + (stale ? ' ⚠ القراءات قديمة' : '');
+    $('#st-cnt').textContent = cnt + '/4'; $('#st-kwh').textContent = (twh / 1000).toFixed(3); $('#st-age').textContent = s.on && s.age >= 0 ? s.age + ' ث' : '--';
+    $('#st-sum').textContent = tw.toFixed(1) + ' W · ' + (twh / 1000).toFixed(3) + ' kWh';
+    const hub = $('#st-hub'); hub.disabled = !s.on; hub.classList.toggle('on', cnt > 0);
     s.o.forEach((o, i) => {
-      const c = el('div', 'so' + (o.on ? ' on' : '') + (o.ok ? '' : ' bad'));
-      const h = el('h3'); h.appendChild(el('span', '', 'مخرج ' + (i + 1))); h.appendChild(el('span', 'badge', o.on ? 'ON' : 'OFF'));
-      c.appendChild(h);
-      c.appendChild(el('div', 'm', o.w.toFixed(1) + ' W | ' + (o.wh / 1000).toFixed(3) + ' kWh | ' + o.t + '°C' + (o.ok ? '' : ' ⚠')));
-      const b = el('button', 'btn ' + (o.on ? 'danger' : 'run'), o.on ? 'إطفاء' : 'تشغيل');
-      b.disabled = !s.on; b.onclick = () => stripSet(i + 1, o.on ? 'off' : 'on');
-      c.appendChild(b); g.appendChild(c);
+      const t = $('#so' + i);
+      t.classList.toggle('on', !!o.on); t.classList.toggle('dis', !s.on); t.classList.toggle('bad', !o.ok);
+      t.querySelector('.nm').textContent = outName(i);
+      t.querySelector('.w').textContent = o.w.toFixed(1) + ' W';
+      t.querySelector('.sub').textContent = (o.wh / 1000).toFixed(3) + ' kWh · ' + o.t + '°C';
+      t.querySelector('.wn').hidden = !!o.ok;
     });
   } catch (e) {}
 }
@@ -615,14 +816,20 @@ async function loadIrList() {
 function renderIr() {
   const box = $('#irlist'); box.textContent = '';
   $('#ir-count').textContent = irList.length;
+  const iq = $('#irq'); iq.hidden = irList.length < 6;
+  const qq = iq.hidden ? '' : iq.value.trim().toLowerCase();
   if (!irList.length) { box.appendChild(el('div', 'empty', 'لا توجد إشارات محفوظة بعد')); return; }
-  irList.forEach(c => {
+  const shown = irList.filter(c => !qq || c.name.toLowerCase().includes(qq));
+  if (!shown.length) { box.appendChild(el('div', 'empty', 'لا نتائج')); return; }
+  shown.forEach(c => {
     const row = el('div', 'cmd');
     const main = el('div', 'cmd-main');
     main.appendChild(el('div', 'cmd-name', c.name));
     const meta = el('div', 'cmd-meta');
     meta.appendChild(el('span', 'badge', c.len + ' نبضة'));
     meta.appendChild(el('code', '', c.khz + ' kHz × ' + c.rep));
+    const uc = cmds.filter(x => (x.steps || []).some(s => s.type === 'ir' && String(s.val) === String(c.id))).length;
+    if (uc) meta.appendChild(el('span', 'badge', uc + ' أمر'));
     main.appendChild(meta);
     const acts = el('div', 'cmd-actions');
     const run = el('button', 'btn run', '▶'); run.onclick = () => sendIr(c.id, run);
@@ -634,15 +841,17 @@ function renderIr() {
 }
 async function startLearn() {
   try { await post('/api/ir/learn'); } catch (e) { toast('لا يوجد اتصال بالجهاز', true); return; }
-  $('#irnew').hidden = true;
-  $('#irstat').textContent = 'وجّه الريموت ناحية المستقبل واضغط الزر...';
+  $('#irnew').hidden = true; learnEnd = Date.now() + 15000; $('#learnBtn').disabled = true;
+  $('#irstat').textContent = 'وجّه الريموت ناحية المستقبل واضغط الزر... (15 ث)';
   clearInterval(learnT); learnT = setInterval(pollLearn, 500);
 }
 async function pollLearn() {
   try {
     const s = await (await fetch('/api/ir/status', {cache: 'no-store'})).json();
-    if (s.state === 'captured') { clearInterval(learnT); $('#irstat').textContent = 'تم الالتقاط: ' + s.len + ' نبضة'; $('#irnew').hidden = false; }
-    else if (s.state === 'timeout') { clearInterval(learnT); $('#irstat').textContent = 'انتهى الوقت - جرّب تاني'; }
+    if (s.state === 'captured') { clearInterval(learnT); $('#learnBtn').disabled = false; $('#irstat').textContent = 'تم الالتقاط: ' + s.len + ' نبضة'; $('#irnew').hidden = false; }
+    else if (s.state === 'timeout') { clearInterval(learnT); $('#learnBtn').disabled = false; $('#irstat').textContent = 'انتهى الوقت - جرّب تاني'; }
+    else if (s.state === 'idle') { clearInterval(learnT); $('#learnBtn').disabled = false; $('#irstat').textContent = ''; }
+    else $('#irstat').textContent = 'وجّه الريموت ناحية المستقبل واضغط الزر... (' + Math.max(0, Math.ceil((learnEnd - Date.now()) / 1000)) + ' ث)';
   } catch (e) {}
 }
 async function testIr() {
@@ -687,7 +896,7 @@ async function loadInfo() {
     const i = await (await fetch('/api/info', {cache:'no-store'})).json();
     $('#ip').textContent = i.ip; $('#dot').className = 'dot on';
     const box = $('#info'); box.textContent = '';
-    [['IP', i.ip], ['Wi-Fi', i.rssi + ' dBm'], ['RAM', Math.round(i.heap / 1024) + ' KB'],
+    [['IP', i.ip], ['Wi-Fi', i.rssi + ' dBm · ' + (i.rssi > -60 ? 'Excellent' : i.rssi > -70 ? 'Good' : i.rssi > -80 ? 'Fair' : 'Weak')], ['RAM', Math.round(i.heap / 1024) + ' KB'],
      ['PSRAM', Math.round(i.psram / 1024 / 1024 * 10) / 10 + ' MB'], ['Uptime', fmtUp(i.up)], ['Wake word', i.wake]]
     .forEach(([a, b]) => { const c = el('div', 'chip'); c.appendChild(el('small', '', a)); c.appendChild(el('b', '', b)); box.appendChild(c); });
   } catch (e) { $('#dot').className = 'dot'; }
@@ -708,12 +917,17 @@ function addLine(text, c) {
   const time = new Date().toTimeString().slice(0, 8);
   const d = el('div', c || cls(text));
   d.appendChild(el('span', 't', time)); d.appendChild(document.createTextNode(text));
-  term.appendChild(d);
+  term.appendChild(d); d.hidden = !logMatch(d);
   logLines.push(time + ' ' + text);
   while (term.childNodes.length > 500) term.removeChild(term.firstChild);
   if (logLines.length > 2000) logLines.splice(0, 500);
   if ($('#autoscroll').checked) term.scrollTop = term.scrollHeight;
 }
+function logMatch(d) {
+  const lv = $('#logLvl').value, q = $('#logq').value.trim().toLowerCase();
+  return (!lv || d.classList.contains(lv)) && (!q || d.textContent.toLowerCase().includes(q));
+}
+function applyLogFilter() { [...$('#term').children].forEach(d => d.hidden = !logMatch(d)); }
 function pushText(txt) {
   const parts = (carry + txt).split('\n');
   carry = parts.pop();
@@ -831,7 +1045,32 @@ async function importCmds(inp) {
   } catch (e) { toast('فشل الاستيراد', true); }
 }
 
-window.onload = () => { applyTheme(document.documentElement.dataset.theme); fillPins(); loadIrList().then(() => { resetForm(); loadCommands(); }); loadInfo(); let ho = false; try { ho = localStorage.getItem('heardOpen') === '1'; } catch (e) {} toggleHeard(ho); };
+/* ---------- تثبيت كتطبيق (PWA) ---------- */
+let deferredInstall = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function pwaUi() {
+  const b = $('#pwa-badge'), i = $('#pwa-info'), btn = $('#pwa-btn'), hb = $('#instBtn');
+  if (!b) return;
+  const ready = !!deferredInstall && !isStandalone();
+  btn.hidden = !ready; hb.hidden = !ready;
+  if (isStandalone()) { b.textContent = 'مثبّت'; b.className = 'badge ok'; i.textContent = 'التطبيق شغال كتطبيق مستقل.'; return; }
+  if (ready) { b.textContent = 'جاهز'; b.className = 'badge ok'; i.textContent = 'اضغط تثبيت وهيتضاف على الشاشة الرئيسية كتطبيق بدل الاختصار.'; return; }
+  b.textContent = 'غير مفعّل'; b.className = 'badge bad';
+  i.innerHTML = window.isSecureContext
+    ? 'المتصفح لسه ما جهزش التثبيت. افتح قايمة المتصفح واختار «تثبيت التطبيق».'
+    : 'كروم بيمنع التثبيت الحقيقي على http. على الموبايل افتح <b dir="ltr">chrome://flags/#unsafely-treat-insecure-origin-as-secure</b> وفعّله، وحط <b dir="ltr">http://' + location.host + '</b> في الخانة، وأعد تشغيل كروم، وبعدها زر التثبيت هيظهر هنا.';
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; pwaUi(); });
+window.addEventListener('appinstalled', () => { deferredInstall = null; pwaUi(); toast('تم تثبيت التطبيق'); });
+async function installApp() {
+  if (!deferredInstall) { pwaUi(); return; }
+  deferredInstall.prompt();
+  try { await deferredInstall.userChoice; } catch (e) {}
+  deferredInstall = null; pwaUi();
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+window.onload = () => { applyTheme(document.documentElement.dataset.theme); initCards(); fillPins(); loadIrList().then(() => { resetForm(); loadCommands(); }); loadInfo(); let ho = false; try { ho = localStorage.getItem('heardOpen') === '1'; } catch (e) {} toggleHeard(ho); pwaUi(); const tb = new URLSearchParams(location.search).get('tab'); if (tb && document.querySelector('.tab[data-tab="' + tb + '"]')) showTab(tb); };
 </script>
 </body>
 </html>

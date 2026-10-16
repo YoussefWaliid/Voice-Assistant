@@ -10,6 +10,7 @@
 #include <ArduinoOTA.h>
 #include <Update.h>
 #include "audio_clips.h"   // مقاطع "مرحبا" و "تمام" (ملف مرفق في نفس الفولدر)
+#include "pwa_assets.h"   // PWA: manifest + service worker + أيقونات (ملف مرفق في نفس الفولدر)
 #include "index_html.h"    // صفحة الويب (ملف مرفق في نفس الفولدر)
 
 // لازم يتعرّف هنا فوق (قبل أي دالة) عشان الـ prototypes اللي Arduino بيولّدها تلقائياً تشوفه
@@ -1218,6 +1219,7 @@ void setup() {
 
   irRegisterRoutes();
   stripRegisterRoutes();
+  pwaRegisterRoutes();
   stripInit();
   server.begin();
   Serial.println("Web Server Started. Say '" WAKE_WORD "' to wake up!");
