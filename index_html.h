@@ -10,9 +10,10 @@ const char index_html[] PROGMEM = R"rawliteral(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0f172a">
 <title>Voice Hub</title>
+<script>(function(){var t=null;try{t=localStorage.getItem('theme')}catch(e){}if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;})();</script>
 <style>
 :root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--mute:#64748b;--line:#e2e8f0;--pri:#2563eb;--pri2:#1d4ed8;--ok:#16a34a;--bad:#dc2626;--chip:#eef2ff;--term:#0b1220;--termtx:#cbd5e1}
-@media(prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#131c2e;--text:#e5e7eb;--mute:#94a3b8;--line:#22304a;--pri:#3b82f6;--pri2:#2563eb;--chip:#1b2740;--term:#060b16}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0b1220;--card:#131c2e;--text:#e5e7eb;--mute:#94a3b8;--line:#22304a;--pri:#3b82f6;--pri2:#2563eb;--chip:#1b2740;--term:#060b16}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,'Noto Sans Arabic',sans-serif;font-size:15px}
@@ -95,13 +96,22 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .step.dragging{opacity:.4}
 .step.over{outline:2px dashed var(--pri);outline-offset:2px;border-radius:9px}
 .bk{display:flex;gap:8px;margin-bottom:10px}.bk>*{flex:1}
+.hr{display:flex;align-items:center;gap:12px}
+.thm{padding:6px 10px;font-size:16px;line-height:1}
+.cath{cursor:pointer;user-select:none}
+.catt{display:flex;align-items:center;gap:8px;min-width:0}
+.catt .carr{color:var(--mute);width:14px;text-align:center}
+.cmv{display:flex;gap:4px;flex-shrink:0}
+.cmv .btn{padding:3px 9px;font-size:12px}
+.cmv .btn:disabled{opacity:.35;cursor:default}
+.catbody .cmd:last-child{margin-bottom:0}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>🎙️ Voice Hub</h1>
-    <div class="live"><span class="dot" id="dot"></span><span id="ip">--</span></div>
+    <div class="hr"><div class="live"><span class="dot" id="dot"></span><span id="ip">--</span></div><button class="btn ghost thm" id="themeBtn" onclick="toggleTheme()" title="تغيير الثيم">🌙</button></div>
   </header>
 
   <div class="tabs">
@@ -252,6 +262,20 @@ function toast(msg, bad) {
   clearTimeout(toastT); toastT = setTimeout(() => t.className = '', 2400);
 }
 
+/* ---------- theme + local UI state ---------- */
+const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('#themeBtn').textContent = t === 'dark' ? '☀️' : '🌙';
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'dark' ? '#0b1220' : '#f1f5f9';
+}
+function toggleTheme() {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('theme', t); } catch (e) {}
+  applyTheme(t);
+}
+
 /* ---------- tabs ---------- */
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
@@ -386,17 +410,39 @@ async function loadCommands() {
 function renderCommands() {
   const box = $('#groups'); box.textContent = '';
   $('#cmd-count').textContent = cmds.length;
-  const cats = [...new Set(cmds.map(c => c.cat || 'عام'))];
+  const found = [...new Set(cmds.map(c => c.cat || 'عام'))];
+  const saved = lsGet('catOrder', []);
+  const cats = [...saved.filter(c => found.includes(c)), ...found.filter(c => !saved.includes(c))];
+  const openCats = lsGet('catOpen', []);
   const dl = $('#cats'); dl.textContent = '';
   cats.forEach(c => { const o = el('option'); o.value = c; dl.appendChild(o); });
   if (!cmds.length) {
     const card = el('div', 'card'); card.appendChild(el('div', 'empty', 'لا توجد أوامر محفوظة بعد')); box.appendChild(card); return;
   }
-  cats.forEach(cat => {
+  cats.forEach((cat, idx) => {
     const list = cmds.filter(c => (c.cat || 'عام') === cat);
     const card = el('div', 'card');
-    const h = el('h2'); h.appendChild(el('span', '', cat)); h.appendChild(el('span', 'badge', list.length));
+    const open = openCats.includes(cat);
+    const h = el('h2', 'cath');
+    const left = el('span', 'catt');
+    const arrow = el('span', 'carr', open ? '▾' : '◂');
+    left.appendChild(arrow); left.appendChild(el('span', '', cat)); left.appendChild(el('span', 'badge', list.length));
+    const mvb = el('span', 'cmv');
+    const up = el('button', 'btn ghost', '▲'); up.title = 'تحريك لفوق'; up.disabled = idx === 0;
+    const dn = el('button', 'btn ghost', '▼'); dn.title = 'تحريك لتحت'; dn.disabled = idx === cats.length - 1;
+    up.onclick = e => { e.stopPropagation(); moveCat(cats, idx, -1); };
+    dn.onclick = e => { e.stopPropagation(); moveCat(cats, idx, 1); };
+    mvb.appendChild(up); mvb.appendChild(dn);
+    h.appendChild(left); h.appendChild(mvb);
     card.appendChild(h);
+    const body = el('div', 'catbody'); body.hidden = !open; h.style.marginBottom = open ? '' : '0';
+    h.onclick = () => {
+      const o = lsGet('catOpen', []), k = o.indexOf(cat), now = k < 0;
+      if (now) o.push(cat); else o.splice(k, 1);
+      lsSet('catOpen', o);
+      body.hidden = !now; arrow.textContent = now ? '▾' : '◂'; h.style.marginBottom = now ? '' : '0';
+    };
+    card.appendChild(body);
     list.forEach(c => {
       const row = el('div', 'cmd');
       const main = el('div', 'cmd-main');
@@ -425,10 +471,15 @@ function renderCommands() {
       const del = el('button', 'btn del', '🗑'); del.onclick = () => delCmd(c.id, c.name);
       acts.appendChild(run); acts.appendChild(ed); acts.appendChild(del);
       row.appendChild(main); row.appendChild(acts);
-      card.appendChild(row);
+      body.appendChild(row);
     });
     box.appendChild(card);
   });
+}
+function moveCat(cats, i, d) {
+  const j = i + d; if (j < 0 || j >= cats.length) return;
+  [cats[i], cats[j]] = [cats[j], cats[i]];
+  lsSet('catOrder', cats); renderCommands();
 }
 
 async function saveCommand() {
@@ -780,7 +831,7 @@ async function importCmds(inp) {
   } catch (e) { toast('فشل الاستيراد', true); }
 }
 
-window.onload = () => { fillPins(); loadIrList().then(() => { resetForm(); loadCommands(); }); loadInfo(); let ho = false; try { ho = localStorage.getItem('heardOpen') === '1'; } catch (e) {} toggleHeard(ho); };
+window.onload = () => { applyTheme(document.documentElement.dataset.theme); fillPins(); loadIrList().then(() => { resetForm(); loadCommands(); }); loadInfo(); let ho = false; try { ho = localStorage.getItem('heardOpen') === '1'; } catch (e) {} toggleHeard(ho); };
 </script>
 </body>
 </html>
