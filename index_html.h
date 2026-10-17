@@ -65,7 +65,7 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .tools input{width:auto;margin:0}
 #term{direction:ltr;text-align:left;background:var(--term);color:var(--termtx);border-radius:10px;padding:10px;height:min(340px,50vh);overflow-y:auto;font:12.5px/1.55 ui-monospace,Consolas,Menlo,monospace}
 #term div{white-space:pre-wrap;word-break:break-all}
-#term .t{color:#475569;margin-right:8px}
+#term .t{color:#475569;margin-right:8px;white-space:nowrap;font-variant-numeric:tabular-nums}
 #term .err{color:#f87171}#term .ok{color:#4ade80}#term .wake{color:#22d3ee}#term .proc{color:#c084fc}#term .sys{color:#fbbf24}
 .send{display:flex;gap:6px;margin-top:10px}
 .send input{margin:0}
@@ -130,6 +130,10 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .tile .w{font:700 17px var(--mono);color:var(--mute);direction:ltr}
 .tile.on .w{color:var(--g)}
 .tile .sub{font:12px var(--mono);color:var(--mute);direction:ltr}
+.tile .a{font:600 13px var(--mono);color:var(--mute);direction:ltr}
+.tile.on .a{color:var(--g);opacity:.85}
+.hero .big{display:flex;flex-wrap:wrap;align-items:baseline}
+.hero .big small.amp{color:var(--g);font-family:var(--mono);font-weight:700;margin-inline-start:16px}
 .tile .ed{position:absolute;top:10px;background:none;border:0;color:var(--mute);font-size:14px;cursor:pointer;padding:4px}
 .tile:nth-child(odd) .ed{right:8px}.tile:nth-child(even) .ed{left:8px}
 .tile .wn{position:absolute;bottom:10px;font-size:14px}
@@ -181,6 +185,81 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
 .so h3 .nm small{color:var(--mute)}
 .tools select{width:auto;margin:0;padding:7px 9px;font-size:13px}
 .tools input[type=search]{width:auto;flex:1;min-width:120px;margin:0;padding:7px 10px;font-size:13px}
+
+/* ================= موبايل ================= */
+html{-webkit-text-size-adjust:100%}
+.tab{white-space:nowrap}
+.btn{touch-action:manipulation}
+.tile .ed{padding:8px}
+.tile .wn{bottom:auto;top:12px}
+.tile:nth-child(odd) .wn{right:40px}.tile:nth-child(even) .wn{left:40px}
+@media(max-width:600px){
+  body{font-size:14.5px}
+  .wrap{padding:10px 10px 28px}
+  header{margin-bottom:10px}
+  header h1{font-size:18px}
+  .tabs{gap:3px;padding:4px;top:4px;border-radius:12px;margin-bottom:10px}
+  .tab{padding:10px 2px;font-size:13.5px}
+  .card{padding:12px;border-radius:12px;margin-bottom:10px}
+  .card h2{font-size:15px;margin-bottom:10px}
+  input,select,textarea{font-size:16px}
+  /* قائمة الأوامر والإشارات: الأزرار تحت المحتوى بعرض كامل بدل ما تاكل العرض */
+  .cmd{flex-direction:column;align-items:stretch;gap:10px;padding:10px}
+  .cmd.hrow{flex-direction:row;align-items:center}
+  .cmd-actions{width:100%}
+  .cmd.hrow .cmd-actions{width:auto}
+  .cmd-actions .btn{flex:1;padding:10px 0}
+  .cmd.hrow .cmd-actions .btn{flex:none;padding:10px 16px}
+  .cmd-link .btn{padding:8px 10px}
+  .stp{padding:6px 8px}
+  /* صف الخطوة في الفورم: سطر للنوع + سطر للقيمة */
+  .step{flex-wrap:wrap;gap:6px}
+  .step .grip{order:1;padding:8px 2px}
+  .step .mv{order:2}
+  .step .mv .btn{height:22px;padding:0 10px}
+  .step .tsel{order:3;flex:1;width:auto;min-width:0}
+  .step>.btn.del{order:4}
+  .step .tin,.step .irsel,.step .sv,.step .dl{order:5;flex:1 1 100%;width:100%}
+  .step .sv select{min-width:0}
+  .send .btn{padding:10px 12px}
+  .tools .btn{padding:8px 10px}
+  .tools label{margin-inline-start:0;width:100%}
+  #term{height:min(300px,45vh);font-size:12px}
+  .info{grid-template-columns:repeat(2,1fr)}
+  .irrow{flex-direction:column}
+  /* تاب المشترك */
+  .hero{border-radius:20px;margin-bottom:10px}
+  .hero .top{padding:14px 14px 10px}
+  .hero .lbl{font-size:13px}
+  .hero .big{font-size:38px}
+  .hero .big small{font-size:15px}
+  .lv{font-size:11px}
+  .hstats>div{padding:10px}
+  .hstats b{font-size:15px}
+  .hstats span{font-size:11px}
+  .scard{padding:12px;border-radius:20px}
+  .shead h3{font-size:18px}
+  .ssum{font-size:13.5px;margin:10px 2px 12px}
+  .sgrid2{gap:10px}
+  .tile{min-height:128px;padding:12px;border-radius:18px}
+  .tile .pg{width:42px;height:42px}
+  .tile .nm{font-size:15px;margin-top:8px}
+  .tile .w{font-size:16px}
+  .tile .sub{font-size:11px;white-space:normal}
+  .hub{width:52px;height:52px;margin:-26px 0 0 -26px;box-shadow:0 0 0 6px var(--card)}
+  .hub.on{box-shadow:0 0 0 6px var(--card),0 0 16px var(--gs)}
+  .sgrid{gap:8px}
+  #toast{width:max-content;max-width:90vw;text-align:center;bottom:16px}
+}
+@media(max-width:360px){
+  .tab{font-size:12.5px}
+  .hero .big{font-size:34px}
+  .tile .nm{font-size:14px}
+}
+.subtabs{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:4px;scrollbar-width:none}
+.subtabs::-webkit-scrollbar{display:none}
+.stab{flex:none;border:1px solid var(--line);background:var(--card);color:var(--mute);padding:8px 14px;border-radius:99px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.stab.active{background:var(--pri);border-color:var(--pri);color:#fff}
 </style>
 </head>
 <body>
@@ -192,7 +271,6 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
 
   <div class="tabs">
     <button class="tab active" data-tab="cmds" onclick="showTab('cmds')">الأوامر</button>
-    <button class="tab" data-tab="ir" onclick="showTab('ir')">IR</button>
     <button class="tab" data-tab="strip" onclick="showTab('strip')">المشترك</button>
     <button class="tab" data-tab="maint" onclick="showTab('maint')">الصيانة</button>
   </div>
@@ -234,7 +312,7 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       <div class="top">
         <div>
           <div class="lbl" id="st-lbl">الاستهلاك الآن</div>
-          <div class="big"><span id="st-w">0.0</span><small>W</small></div>
+          <div class="big"><span id="st-w">0.0</span><small>W</small><small class="amp" id="st-a">0.00 A</small></div>
         </div>
         <div class="lv off" id="st-live"><i></i><span id="st-livetx">OFFLINE</span></div>
       </div>
@@ -255,24 +333,35 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
         <div class="sgrid2" id="st-grid"></div>
         <button class="hub" id="st-hub" onclick="stripHub()" title="تشغيل/إطفاء الكل"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 7.2a8 8 0 1 0 11.4 0"/></svg></button>
       </div>
+      <button class="btn ghost full" style="margin-top:12px" onclick="stripRefresh(true)">🔄 تحديث القراءات</button>
       <div class="sdet" id="st-det" hidden>
         <div class="sinfo" id="st-info">--</div>
         <div class="sinfo" style="margin-top:8px;direction:rtl;text-align:right">لإضافة/إعادة ربط المشترك: من تطبيق MTTL Control &gt; Device setup اكتب IP الجهاز ده: <b id="st-ip">--</b> (بورت 10086)</div>
-        <button class="btn ghost full" style="margin-top:10px" onclick="stripRefresh()">تحديث القراءات</button>
+        <button class="btn ghost full" style="margin-top:10px" onclick="stripRaw()">🔍 عرض الرد الخام (تشخيص)</button>
+        <pre id="st-raw" hidden style="direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-all;font:12px/1.6 ui-monospace,monospace;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin:10px 0 0;user-select:text"></pre>
       </div>
     </div>
   </section>
 
-  <section class="panel" id="tab-ir" hidden>
-    <div class="card" data-cl="irpins:0">
-      <h2>أطراف الـ IR (GPIO)</h2>
-      <label class="lbl">المرسل (IR LED) - TX</label>
-      <select id="irtx"></select>
-      <label class="lbl">المستقبل (VS1838B) - RX</label>
-      <select id="irrx"></select>
-      <button class="btn full" onclick="saveIrCfg()">حفظ الأطراف</button>
+  <section class="panel" id="tab-maint" hidden>
+    <div class="subtabs" id="subtabs"><button class="stab active" data-sub="log" onclick="showSub('log')">السجل</button><button class="stab" data-sub="dev" onclick="showSub('dev')">الجهاز</button><button class="stab" data-sub="ir" onclick="showSub('ir')">IR</button><button class="stab" data-sub="mic" onclick="showSub('mic')">الميكروفون</button><button class="stab" data-sub="bk" onclick="showSub('bk')">النسخ الاحتياطي</button></div>
+    <div class="sub" id="sub-dev" hidden>
+    <div class="card" data-cl="m_info:1">
+      <h2>حالة الجهاز</h2>
+      <div class="info" id="info"></div>
     </div>
-
+    <div class="card" data-cl="pwa:1">
+      <h2>تثبيت كتطبيق <span class="badge" id="pwa-badge">--</span></h2>
+      <div class="sinfo" id="pwa-info" style="direction:rtl;text-align:right">--</div>
+      <button class="btn full" id="pwa-btn" style="margin-top:10px" onclick="installApp()" hidden>📲 تثبيت التطبيق</button>
+    </div>
+    <div class="card" data-cl="m_tools:1">
+      <h2>أدوات</h2>
+      <button class="btn danger full" onclick="reboot()">🔄 إعادة تشغيل الجهاز</button>
+    </div>
+  
+    </div>
+    <div class="sub" id="sub-ir" hidden>
     <div class="card" data-cl="learn:1">
       <h2>تعلّم إشارة جديدة</h2>
       <button class="btn full" id="learnBtn" onclick="startLearn()">🎯 ابدأ التعلم</button>
@@ -289,26 +378,23 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
         </div>
       </div>
     </div>
-
     <div class="card" data-cl="irsaved:1">
       <h2>الإشارات المحفوظة <span class="badge" id="ir-count">0</span></h2>
       <input type="search" id="irq" dir="auto" placeholder="🔍 بحث في الإشارات" oninput="renderIr()" hidden>
       <div id="irlist"></div>
     </div>
-  </section>
-
-  <section class="panel" id="tab-maint" hidden>
-    <div class="card" data-cl="pwa:0">
-      <h2>تثبيت كتطبيق <span class="badge" id="pwa-badge">--</span></h2>
-      <div class="sinfo" id="pwa-info" style="direction:rtl;text-align:right">--</div>
-      <button class="btn full" id="pwa-btn" style="margin-top:10px" onclick="installApp()" hidden>📲 تثبيت التطبيق</button>
+  
+    <div class="card" data-cl="irpins:1">
+      <h2>أطراف الـ IR (GPIO)</h2>
+      <label class="lbl">المرسل (IR LED) - TX</label>
+      <select id="irtx"></select>
+      <label class="lbl">المستقبل (VS1838B) - RX</label>
+      <select id="irrx"></select>
+      <button class="btn full" onclick="saveIrCfg()">حفظ الأطراف</button>
     </div>
-    <div class="card" data-cl="m_info:1">
-      <h2>حالة الجهاز</h2>
-      <div class="info" id="info"></div>
     </div>
-
-    <div class="card" data-cl="m_mic:0">
+    <div class="sub" id="sub-mic" hidden>
+    <div class="card" data-cl="m_mic:1">
       <h2>الميكروفون</h2>
       <label class="lbl">تكبير كلمة التنبيه (wake word) - زوّده لو مش بيسمعك من بعيد (2 - 128)</label>
       <input type="number" id="micg" min="2" max="128" step="2" dir="ltr">
@@ -317,7 +403,8 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       <button class="btn full" onclick="saveMic()">حفظ</button>
       <div class="sinfo" id="micinfo" style="margin-top:10px">--</div>
     </div>
-
+    </div>
+    <div class="sub" id="sub-log">
     <div class="card" data-cl="m_log:1">
       <h2>Serial Monitor</h2>
       <div class="tools">
@@ -334,8 +421,9 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
         <button class="btn" onclick="sendSay()">إرسال</button>
       </div>
     </div>
-
-    <div class="card" data-cl="m_bk:0">
+    </div>
+    <div class="sub" id="sub-bk" hidden>
+    <div class="card" data-cl="m_bk:1">
       <h2>نسخة احتياطية للأوامر</h2>
       <div class="bk">
         <button class="btn ghost" onclick="exportCmds()">⬇ تصدير (JSON)</button>
@@ -344,12 +432,9 @@ textarea:focus{outline:2px solid var(--pri);outline-offset:-1px}
       <input type="file" id="impFile" accept=".json,application/json" hidden onchange="importCmds(this)">
       <div class="sinfo">التصدير بيحفظ كل الأوامر (الجمل + الخطوات + الترتيب) في ملف على جهازك. وبيحفظ كمان الإشارات الـ IR المتعلَّمة، وبيتعاد ربطها بالأوامر تلقائي وقت الاستيراد.</div>
     </div>
-
-    <div class="card" data-cl="m_tools:0">
-      <h2>أدوات</h2>
-      <button class="btn danger full" onclick="reboot()">🔄 إعادة تشغيل الجهاز</button>
     </div>
   </section>
+
 </div>
 <div id="toast"></div>
 
@@ -400,17 +485,27 @@ function initCards() { document.querySelectorAll('[data-cl]').forEach(c => { con
 function openForm() { if (CARDS.form) CARDS.form(true); }
 
 /* ---------- tabs ---------- */
-function showTab(name) {
+function showSub(name) {
+  if (!name) name = 'log';
+  if (!document.getElementById('sub-' + name)) name = 'log';
+  document.querySelectorAll('.stab').forEach(b => b.classList.toggle('active', b.dataset.sub === name));
+  document.querySelectorAll('.sub').forEach(d => d.hidden = d.id !== 'sub-' + name);
+  const sb = document.querySelector('.stab.active'); if (sb && sb.scrollIntoView) sb.scrollIntoView({inline: 'center', block: 'nearest'});
+  clearInterval(infoTimer); stopLog();
+  if (name === 'dev') { loadInfo(); infoTimer = setInterval(loadInfo, 10000); }
+  if (name === 'ir') { loadIrCfg(); loadIrList(); }
+  if (name === 'mic') loadMic();
+  if (name === 'log') startLog();
+}
+function showTab(name, dir) {
   const ord = [...document.querySelectorAll('.tab')].map(b => b.dataset.tab), pa = document.querySelector('.tab.active'), prev = pa ? pa.dataset.tab : null;
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== 'tab-' + name);
-  if (name === 'ir') { loadIrCfg(); loadIrList(); }
   if (name === 'strip') startStrip(); else stopStrip();
   if (name === 'cmds' && !$('#heardBody').hidden) loadHeard();
-  if (name === 'maint') loadMic();
-  if (name === 'maint') { startLog(); loadInfo(); } else stopLog();
+  if (name === 'maint') { showSub(window.__sub || 'log'); window.__sub = null; } else { stopLog(); clearInterval(infoTimer); }
   const pn = $('#tab-' + name);
-  if (prev && prev !== name) { pn.style.setProperty('--sx', (ord.indexOf(name) > ord.indexOf(prev) ? -30 : 30) + 'px'); pn.classList.remove('sl'); void pn.offsetWidth; pn.classList.add('sl'); }
+  if (prev && prev !== name) { pn.style.setProperty('--sx', (dir || (ord.indexOf(name) > ord.indexOf(prev) ? -1 : 1)) * 30 + 'px'); pn.classList.remove('sl'); void pn.offsetWidth; pn.classList.add('sl'); }
   const at = document.querySelector('.tab.active'); if (at && at.scrollIntoView) at.scrollIntoView({inline: 'center', block: 'nearest'});
 }
 
@@ -434,8 +529,8 @@ function showTab(name) {
     if (String(getSelection()).length) return;
     const ord = [...document.querySelectorAll('.tab')].map(b => b.dataset.tab), a = document.querySelector('.tab.active');
     const i = a ? ord.indexOf(a.dataset.tab) : -1; if (i < 0) return;
-    const j = dx < 0 ? i + 1 : i - 1;
-    if (j >= 0 && j < ord.length) showTab(ord[j]);
+    const d = dx < 0 ? -1 : 1, n = ord.length, j = (i - d + n) % n;   // دايرة: بعد آخر تاب يرجع للأول
+    if (n > 1) showTab(ord[j], d);
   }, {passive: true});
 })();
 
@@ -697,7 +792,7 @@ async function loadHeard() {
     const box = $('#heard'); box.textContent = '';
     if (!a.length) { box.appendChild(el('div', 'empty', $('#heardOn').checked ? 'لسه ما سمعش حاجة' : 'التسجيل متوقف')); return; }
     a.forEach(h => {
-      const row = el('div', 'cmd');
+      const row = el('div', 'cmd hrow');
       const main = el('div', 'cmd-main'); main.appendChild(el('div', 'cmd-name', (h.ok ? '✔ ' : '✖ ') + h.t));
       const acts = el('div', 'cmd-actions');
       const add = el('button', 'btn ghost', '＋');
@@ -733,7 +828,7 @@ async function saveMic() {
   try { const r = await post('/api/mic', {g: $('#micg').value, v: $('#micv').value}); toast(r.ok ? 'تم الحفظ' : 'قيمة غير صالحة', !r.ok); loadMic(); }
   catch (e) { toast('لا يوجد اتصال بالجهاز', true); }
 }
-setInterval(() => { if (!$('#tab-maint').hidden) loadMic(); if (!$('#tab-cmds').hidden && !$('#heardBody').hidden) loadHeard(); }, 2500);
+setInterval(() => { if (!$('#sub-mic').hidden && !$('#tab-maint').hidden) loadMic(); if (!$('#tab-cmds').hidden && !$('#heardBody').hidden) loadHeard(); }, 2500);
 
 /* ---------- المشترك ---------- */
 let learnEnd = 0;
@@ -753,7 +848,7 @@ function buildStrip() {
   const g = $('#st-grid'); g.textContent = '';
   for (let i = 0; i < 4; i++) {
     const t = el('div', 'tile dis'); t.id = 'so' + i;
-    t.innerHTML = PLUG + '<div class="nm"></div><div class="w"></div><div class="sub"></div><span class="wn" hidden>⚠</span>';
+    t.innerHTML = PLUG + '<div class="nm"></div><div class="w"></div><div class="a"></div><div class="sub"></div><span class="wn" hidden>⚠</span>';
     const ed = el('button', 'ed', '✎'); ed.title = 'تغيير الاسم'; ed.onclick = e => { e.stopPropagation(); renameOut(i); };
     t.appendChild(ed);
     t.onclick = () => { if (!t.classList.contains('dis')) stripSet(i + 1, t.classList.contains('on') ? 'off' : 'on'); };
@@ -773,17 +868,18 @@ async function stripStatus() {
     $('#st-badge').textContent = s.on ? 'متصل' : 'غير متصل'; $('#st-badge').className = 'pill' + (s.on ? '' : ' off');
     $('#st-card').classList.toggle('on', !!s.on);
     $('#st-info').textContent = s.on ? ('MAC ' + s.mac + ' | FW ' + s.fw + ' | آخر قراءة: ' + (s.age < 0 ? '--' : s.age + ' ث')) : 'مستني اتصال المشترك على ' + s.ip + ':' + s.port;
+    const V = s.v > 0 ? s.v : 220, ap = s.v > 0 ? '' : '≈', amp = w => ap + (w / V).toFixed(2) + ' A';
     const tw = s.o.reduce((a, o) => a + o.w, 0), twh = s.o.reduce((a, o) => a + o.wh, 0), cnt = s.o.filter(o => o.on).length;
-    $('#st-w').textContent = tw.toFixed(1);
+    $('#st-w').textContent = tw.toFixed(1); $('#st-a').textContent = amp(tw);
     $('#st-lbl').textContent = 'الاستهلاك الآن' + (stale ? ' ⚠ القراءات قديمة' : '');
     $('#st-cnt').textContent = cnt + '/4'; $('#st-kwh').textContent = (twh / 1000).toFixed(3); $('#st-age').textContent = s.on && s.age >= 0 ? s.age + ' ث' : '--';
-    $('#st-sum').textContent = tw.toFixed(1) + ' W · ' + (twh / 1000).toFixed(3) + ' kWh';
+    $('#st-sum').textContent = tw.toFixed(1) + ' W · ' + (twh / 1000).toFixed(3) + ' kWh · ' + amp(tw) + (s.v > 0 ? ' · ' + s.v.toFixed(0) + ' V' : ' (بافتراض 220V)');
     const hub = $('#st-hub'); hub.disabled = !s.on; hub.classList.toggle('on', cnt > 0);
     s.o.forEach((o, i) => {
       const t = $('#so' + i);
       t.classList.toggle('on', !!o.on); t.classList.toggle('dis', !s.on); t.classList.toggle('bad', !o.ok);
       t.querySelector('.nm').textContent = outName(i);
-      t.querySelector('.w').textContent = o.w.toFixed(1) + ' W';
+      t.querySelector('.w').textContent = o.w.toFixed(1) + ' W'; t.querySelector('.a').textContent = amp(o.w);
       t.querySelector('.sub').textContent = (o.wh / 1000).toFixed(3) + ' kWh · ' + o.t + '°C';
       t.querySelector('.wn').hidden = !!o.ok;
     });
@@ -793,7 +889,19 @@ async function stripSet(n, st) {
   try { const r = await post('/api/strip/set', {n, s: st}); toast(r.ok ? 'تم الإرسال' : (r.status === 409 ? 'المشترك غير متصل' : 'فشل'), !r.ok); setTimeout(stripStatus, 900); }
   catch (e) { toast('لا يوجد اتصال بالجهاز', true); }
 }
-async function stripRefresh() { try { await post('/api/strip/refresh'); setTimeout(stripStatus, 700); } catch (e) {} }
+async function stripRefresh(manual) {
+  try { const r = await post('/api/strip/refresh'); if (manual) toast(r.ok ? 'جاري التحديث...' : 'المشترك غير متصل', !r.ok); setTimeout(stripStatus, 700); }
+  catch (e) { if (manual) toast('لا يوجد اتصال بالجهاز', true); }
+}
+async function stripRaw() {
+  const pre = $('#st-raw');
+  try {
+    const t = (await (await fetch('/api/strip/raw', {cache: 'no-store'})).text()).trim();
+    const p = t.split(':'); let out = t || 'لا يوجد رد بعد';
+    if (p.length === 8) out = [0, 1, 2, 3].map(k => 'outlet ' + p[k * 2] + ' → ' + p[k * 2 + 1].split(';').map((v, i) => 'F' + i + '=' + v).join(' ')).join('\n');
+    pre.textContent = out; pre.hidden = false;
+  } catch (e) { toast('لا يوجد اتصال بالجهاز', true); }
+}
 
 /* ---------- IR ---------- */
 const IR_PINS = [1,2,4,6,9,10,11,12,13,14,18,21,38,39,40,41,42,47];
@@ -891,13 +999,15 @@ function fmtUp(s) {
   const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
   return (d ? d + 'd ' : '') + h + 'h ' + m + 'm';
 }
+let lastTimePush = 0;
 async function loadInfo() {
   try {
     const i = await (await fetch('/api/info', {cache:'no-store'})).json();
+    if (i.sync === 0 && Date.now() - lastTimePush > 30000) { lastTimePush = Date.now(); post('/api/time', {ts: Math.floor(Date.now() / 1000)}).catch(() => {}); }   // NTP مش شغال: الموبايل يضبط الساعة
     $('#ip').textContent = i.ip; $('#dot').className = 'dot on';
     const box = $('#info'); box.textContent = '';
     [['IP', i.ip], ['Wi-Fi', i.rssi + ' dBm · ' + (i.rssi > -60 ? 'Excellent' : i.rssi > -70 ? 'Good' : i.rssi > -80 ? 'Fair' : 'Weak')], ['RAM', Math.round(i.heap / 1024) + ' KB'],
-     ['PSRAM', Math.round(i.psram / 1024 / 1024 * 10) / 10 + ' MB'], ['Uptime', fmtUp(i.up)], ['Wake word', i.wake]]
+     ['PSRAM', Math.round(i.psram / 1024 / 1024 * 10) / 10 + ' MB'], ['Uptime', fmtUp(i.up)], ['Wake word', i.wake], ['Time', (i.sync ? '' : '⚠ ') + (i.now ? i.now.slice(11) : 'غير مضبوط')]]
     .forEach(([a, b]) => { const c = el('div', 'chip'); c.appendChild(el('small', '', a)); c.appendChild(el('b', '', b)); box.appendChild(c); });
   } catch (e) { $('#dot').className = 'dot'; }
 }
@@ -914,7 +1024,9 @@ function cls(t) {
 }
 function addLine(text, c) {
   const term = $('#term');
-  const time = new Date().toTimeString().slice(0, 8);
+  let time = null; const m = /^\[([+\d:. APM]+)\] /.exec(text);       // وقت الجهاز نفسه (من الفيرموير)
+  if (m) { time = m[1]; text = text.slice(m[0].length); }
+  if (!time) time = new Date().toLocaleTimeString('en-US', {hour12: true});
   const d = el('div', c || cls(text));
   d.appendChild(el('span', 't', time)); d.appendChild(document.createTextNode(text));
   term.appendChild(d); d.hidden = !logMatch(d);
@@ -950,7 +1062,6 @@ async function pollLog() {
 function startLog() {
   stopLog(); pollLog();
   logTimer = setInterval(pollLog, 1000);
-  infoTimer = setInterval(loadInfo, 10000);
 }
 function stopLog() { clearInterval(logTimer); clearInterval(infoTimer); }
 function togglePause() {
@@ -1070,7 +1181,7 @@ async function installApp() {
 }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 
-window.onload = () => { applyTheme(document.documentElement.dataset.theme); initCards(); fillPins(); loadIrList().then(() => { resetForm(); loadCommands(); }); loadInfo(); let ho = false; try { ho = localStorage.getItem('heardOpen') === '1'; } catch (e) {} toggleHeard(ho); pwaUi(); const tb = new URLSearchParams(location.search).get('tab'); if (tb && document.querySelector('.tab[data-tab="' + tb + '"]')) showTab(tb); };
+window.onload = () => { applyTheme(document.documentElement.dataset.theme); initCards(); fillPins(); loadIrList().then(() => { resetForm(); loadCommands(); }); loadInfo(); let ho = false; try { ho = localStorage.getItem('heardOpen') === '1'; } catch (e) {} toggleHeard(ho); pwaUi(); let tb = new URLSearchParams(location.search).get('tab'); if (tb === 'ir') { window.__sub = 'ir'; tb = 'maint'; } if (tb && document.querySelector('.tab[data-tab="' + tb + '"]')) showTab(tb); };
 </script>
 </body>
 </html>

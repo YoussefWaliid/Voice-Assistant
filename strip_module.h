@@ -31,6 +31,10 @@ static bool stripIdent = false;
 static String stripMac, stripFw, stripModel;
 static StripOutlet stripOut[4];
 static bool stripHaveTele = false;
+static float stripVolt = 0;                 // جهد الخط (فولت) من up:power_report:1:vol
+static uint32_t stripVoltAt = 0;
+static bool stripVoltLogged = false;
+static String stripRaw;                     // آخر رد getinfo خام (للتشخيص)
 static uint32_t stripLastRx = 0, stripLastTele = 0, stripLastPoll = 0, stripPollAt = 0, stripPendSince = 0;
 
 static int stripSplit(const String& s, char sep, String* out, int maxN) {
@@ -60,6 +64,7 @@ static void stripDrop(const char* why) {
   stripIdent = false;
   stripBuf = "";
   stripHaveTele = false;
+  stripVolt = 0;
 }
 
 // up:bootinfo:<MODEL>;<MAC1>;<MAC2>;<FW>;connect
@@ -78,6 +83,7 @@ static bool stripParseBoot(const String& line) {
 
 // up:getinfo:1:<rec>:2:<rec>:3:<rec>:4:<rec>   (كل rec فيه 12 حقل بينهم ;)
 static bool stripParseTele(const String& body) {
+  stripRaw = body.substring(0, 900);
   String t[9];
   if (stripSplit(body, ':', t, 9) != 8) return false;
   StripOutlet tmp[4];
@@ -105,7 +111,22 @@ static bool stripParseTele(const String& body) {
   return true;
 }
 
+// up:power_report:1:vol:<millivolt>  (الصيغة مش مؤكدة: بناخد آخر رقم في السطر ونقبله لو منطقي كجهد)
+static void stripParseVolt(const String& line) {
+  int e = (int)line.length() - 1;
+  while (e >= 0 && !isdigit((unsigned char)line[e])) e--;
+  if (e >= 0) {
+    int b = e;
+    while (b > 0 && isdigit((unsigned char)line[b - 1])) b--;
+    long v = line.substring(b, e + 1).toInt();
+    float volts = v >= 1000 ? v / 1000.0f : (float)v;
+    if (volts >= 80 && volts <= 400) { stripVolt = volts; stripVoltAt = millis(); return; }
+  }
+  if (!stripVoltLogged) { stripVoltLogged = true; Serial.println("Strip volt: unexpected reply: " + line.substring(0, 80)); }
+}
+
 static void stripRequestInfo() {
+  stripSendLine(stripCli, "up:power_report:1:vol");
   stripSendLine(stripCli, "up:getinfo:all");
   stripLastPoll = millis();
 }
@@ -120,6 +141,7 @@ static void stripHandleLine(String line) {
     return;
   }
   if (line.startsWith("up:event:")) line = "up:" + line.substring(9);
+  if (line.startsWith("up:power_report:")) { stripParseVolt(line); return; }
   if (line.startsWith("up:onoff:")) {                       // up:onoff:<1-4>:<on|off>
     int n = line.substring(9, 10).toInt();
     String s = line.substring(11);
@@ -245,7 +267,7 @@ static void stripRegisterRoutes() {
     String j = "{\"ip\":\"" + WiFi.localIP().toString() + "\",\"port\":" + String(STRIP_PORT) +
                ",\"on\":" + (stripReady() ? "true" : "false") +
                ",\"mac\":\"" + (stripIdent ? stripMac : String("")) + "\",\"fw\":\"" + (stripIdent ? stripFw : String("")) +
-               "\",\"age\":" + String(stripHaveTele ? (long)((millis() - stripLastTele) / 1000) : -1) + ",\"o\":[";
+               "\",\"age\":" + String(stripHaveTele ? (long)((millis() - stripLastTele) / 1000) : -1) + ",\"v\":" + String((stripVolt > 0 && (millis() - stripVoltAt) < 60000UL) ? stripVolt : 0.0f, 1) + ",\"o\":[";
     for (int i = 0; i < 4; i++) {
       const StripOutlet& o = stripOut[i];
       if (i) j += ",";
@@ -263,6 +285,11 @@ static void stripRegisterRoutes() {
     if (n < 0 || n > 4 || !(s == "on" || s == "off" || s == "toggle")) { server.send(400, "text/plain", "BAD"); return; }
     if (!stripReady()) { server.send(409, "text/plain", "NOT CONNECTED"); return; }
     server.send(stripSet(n, s) ? 200 : 500, "text/plain", "OK");
+  });
+
+  server.on("/api/strip/raw", HTTP_GET, []() {
+    server.sendHeader("Cache-Control", "no-store");
+    server.send(200, "text/plain; charset=utf-8", stripRaw);
   });
 
   server.on("/api/strip/refresh", HTTP_POST, []() {
