@@ -1,332 +1,387 @@
-# Voice-Assistant
-a better way to Control your home 
+# Voice Hub — ESP32-S3 Arabic Voice Assistant & Home Automation Hub
 
-An offline-wake-word, Arabic-friendly **voice-controlled home automation hub** running on an ESP32-S3.
-Say the wake word, speak a command (Arabic or English), and the device runs a chain of actions:
-HTTP calls, Wake-on-LAN, IR signals, relays, a smart power strip, and timed delays.
-Everything is configured from a built-in web page, with no app and no cloud account for the device itself.
-
-> **بالعربي باختصار:** جهاز ESP32-S3 بيسمع كلمة التنبيه (Alexa مثلاً)، تقوله أمر بصوتك، وهو ينفّذ سلسلة خطوات: ريلاي، IR، Wake-on-LAN، مشترك ذكي، HTTP، مع تأخير بين الخطوات. كل الإعدادات من صفحة ويب على الجهاز نفسه.
+A self-contained smart-home controller running on an **ESP32-S3**. Say a wake word, speak an Arabic (or English) command, and the device executes a multi-step action: HTTP requests, Wake-on-LAN, IR codes, local relays, or a smart power strip. Everything — commands, phrases, IR codes, pin assignments — is managed from an on-device, phone-friendly web UI. **No firmware edits are needed to add or change a command.**
 
 ---
 
 ## Table of contents
 
-- [Features](#features)
-- [How it works](#how-it-works)
-- [Hardware](#hardware)
-- [Wiring](#wiring)
-- [Project files](#project-files)
-- [Setup](#setup)
-- [Configuration](#configuration)
-- [Using the web UI](#using-the-web-ui)
-- [Commands and steps](#commands-and-steps)
-- [How delays work](#how-delays-work)
-- [Backup and restore](#backup-and-restore)
-- [IR learning](#ir-learning)
-- [Smart power strip (MTTL-W01)](#smart-power-strip-mttl-w01)
-- [OTA updates](#ota-updates)
-- [HTTP API](#http-api)
-- [Troubleshooting](#troubleshooting)
-- [Security notes](#security-notes)
-- [Credits](#credits)
+1. [Features](#features)
+2. [How it works](#how-it-works)
+3. [Hardware](#hardware)
+4. [Wiring](#wiring)
+5. [Repository layout](#repository-layout)
+6. [Build & flash](#build--flash)
+7. [Configuration](#configuration)
+8. [Web UI guide](#web-ui-guide)
+9. [Commands, phrases and steps](#commands-phrases-and-steps)
+10. [IR module](#ir-module)
+11. [Power-strip module (MTTL-W01)](#power-strip-module-mttl-w01)
+12. [Time & timestamps](#time--timestamps)
+13. [HTTP API reference](#http-api-reference)
+14. [Updating firmware (OTA)](#updating-firmware-ota)
+15. [Troubleshooting](#troubleshooting)
+16. [Security notes](#security-notes)
 
 ---
 
 ## Features
 
-- **Local wake word** detection with Espressif **ESP-SR / WakeNet** (`alexa`, `jarvis`, or `hiesp`). Nothing is streamed until the wake word fires.
-- **Speech-to-text** through [Wit.ai](https://wit.ai) for the command itself (Arabic and English).
-- **Smart voice activity detection**: recording stops when you stop talking, with adjustable sensitivity.
-- **Fault-tolerant phrase matching** in three passes: longest saved phrase contained in the speech, then all words in any order, then fuzzy matching for small transcription mistakes. Arabic text is normalized before matching.
-- **Multi-step commands** with six step types: `HTTP`, `WOL`, `IR`, `Strip`, `Delay`, `Relay`.
-- **Non-blocking delays** between steps, so the device keeps listening while a command waits.
-- **Reorder steps** by drag and drop (mouse or touch) or with up/down buttons.
-- **Import / export** all commands and learned IR signals to a JSON file.
-- **IR learn and send** (raw capture, any remote) with configurable TX/RX pins.
-- **2-channel relay** control and a **MTTL-W01 smart strip** controller (4 outlets, with power, energy and temperature readings).
-- **Voice feedback** through an I2S amplifier, plus an RGB status LED.
-- **Automatic retry**: if it did not hear or understand you, it replies and reopens the mic without needing the wake word again.
-- **Live Serial Monitor** in the browser, a "what the device heard" log, and a text box to test commands without speaking.
-- **OTA updates** from the Arduino IDE or from a browser (`/update`).
-- Responsive **RTL Arabic web UI** with dark mode.
+**Voice**
+- Offline wake-word detection with **ESP-SR WakeNet** (`alexa` by default; `jarvis` / `hiesp` also supported).
+- Voice-activity detection (VAD): recording stops when you stop talking, adapts to room noise, ignores clicks.
+- Speech-to-text through **Wit.ai** (Arabic/English).
+- Arabic text normalisation (diacritics, alef/yaa/taa-marbuta variants, Arabic-Indic digits, definite article “ال”) so phrase matching is forgiving.
+- Three-stage matching: longest phrase contained → all words in any order → fuzzy per-word match (edit distance).
+- Spoken replies from the **MAX98357A** I2S amplifier: random wake and “done” variants, plus “didn’t hear you”, “didn’t understand”, “error”, and “no internet” clips. A failed attempt re-opens the mic automatically (configurable) without the wake word.
+- RGB LED status: cyan = wake detected, red = recording, purple = processing, green/orange/red = result, dim blue standby for 60 s then off.
+
+**Automation**
+- **Commands** with a category, any number of spoken phrases, and an ordered list of steps.
+- Step types: `HTTP`, `WOL`, `IR`, `Strip` (power strip), `Relay`, and **`Delay`** (non-blocking — the rest of the command resumes later while the device keeps working).
+- Every command also gets a copyable URL (`/api/run?id=N`) for shortcuts apps such as *HTTP Shortcuts*.
+- 2-channel relay output (active-low, fully isolated supply).
+- IR learn / send with raw pulse capture, adjustable carrier and repeat count.
+- Full controller for the LG U+ / TONLY **MTTL-W01** power strip with live telemetry.
+
+**Web UI** (RTL, Arabic, dark/light, installable PWA)
+- Phone-first layout; circular tab swiping.
+- Categorised, searchable, reorderable command list; drag-and-drop step ordering.
+- Live power-strip dashboard (watts, amps, kWh, temperature, per-outlet control).
+- Maintenance area with live **Serial Monitor**, device status, microphone tuning, IR tools, and backup/restore.
+
+**Operations**
+- Device-side **NTP clock** (Egypt time with automatic DST, 12-hour format) and millisecond **timestamps on every log line**.
+- OTA updates from Arduino IDE or from the browser (`/update`).
+- Wi-Fi watchdog with auto-reconnect.
+- JSON backup/restore of commands **and** learned IR codes.
+
+---
 
 ## How it works
 
 ```
- wake word (local, ESP-SR)
-        │
-        ▼
- record until silence (VAD)  ──►  Wit.ai speech-to-text
-        │
-        ▼
- normalize text ──► match against saved phrases ──► run the command's steps in order
-                                                         │
-              ┌───────────┬───────────┬──────────┬──────┴───┬─────────┐
-              ▼           ▼           ▼          ▼          ▼         ▼
-            HTTP         WOL          IR       Relay      Strip     Delay
+ mic (INMP441) ──► WakeNet (on-device) ──► reply clip ──► VAD recording
+                                                              │
+                                                     Wit.ai speech-to-text
+                                                              │
+                         normalise Arabic ◄───────────────────┘
+                                │
+               match phrase → command → run steps in order
+                                │
+   ┌───────────┬───────────┬────┴─────┬─────────────┬───────────┐
+  HTTP        WOL         IR       Relay        Strip        Delay
+ (GET)   (magic packet) (38 kHz)  (GPIO 1/2)  (TCP :10086)  (job queue)
+                                │
+                  spoken confirmation + LED colour
 ```
 
-Commands, phrases, IR signals and settings are stored in the device's flash (LittleFS). No external database.
+The web server, IR learning, power-strip socket, delayed jobs and OTA are all serviced from `loop()`, so the device stays responsive while it waits on a delay.
+
+---
 
 ## Hardware
 
-| Part | Notes |
-|------|-------|
-| **ESP32-S3** board with PSRAM and an on-board RGB LED | ESP-SR needs an S3. Uses the `RGB_BUILTIN` LED. |
-| **INMP441** I2S microphone | Input |
-| **MAX98357A** I2S amplifier + small speaker | Voice replies |
-| **2-channel relay module** (optional) | Opto-isolated with separate JD-VCC recommended |
-| **IR LED** + transistor (optional) | Transmit |
-| **VS1838B / TSOP** IR receiver (optional) | Learn signals |
-| **MTTL-W01** smart strip (optional) | Controlled over the local network |
+| Part | Purpose |
+|---|---|
+| ESP32-S3 (N16R8 — 16 MB flash, 8 MB PSRAM) | Main controller |
+| INMP441 | I2S MEMS microphone |
+| MAX98357A + speaker | I2S amplifier for spoken replies |
+| IR LED + NPN transistor | IR transmitter (driven by LEDC PWM carrier) |
+| VS1838B / TSOP | IR receiver (output idles HIGH) |
+| 2-channel 5 V relay module | Local switching (optional) |
+| LG U+ / TONLY **MTTL-W01** strip | Metered 4-outlet smart strip (optional) |
+| Onboard RGB LED | Status indicator |
+
+---
 
 ## Wiring
 
-**Microphone (INMP441)**
+| Signal | GPIO |
+|---|---|
+| Mic WS / SD / SCK | 15 / 17 / 16 |
+| Amp BCLK / LRC / DIN | 5 / 7 / 8 |
+| Relay IN1 / IN2 | 1 / 2 |
+| IR TX / RX (defaults) | 4 / 6 |
 
-| INMP441 | ESP32-S3 |
-|---------|----------|
-| WS | GPIO 15 |
-| SD | GPIO 17 |
-| SCK | GPIO 16 |
-| VDD / GND | 3.3V / GND |
+- **MAX98357A:** VIN→5 V, GND→GND, leave `SD` and `GAIN` unconnected (≈ 9 dB).
+- **Relay (isolated):** ESP32 3.3 V→`VCC`, external 5 V→`JD-VCC` (remove the jumper), common GND, GPIO1→IN1, GPIO2→IN2. Modules are assumed **active-low** (`RELAY_ACTIVE_LOW`).
+- **IR pins are selectable from the web UI** from a safe list: `1, 2, 4, 6, 9–14, 18, 21, 38–42, 47` (strapping, USB, UART0, PSRAM, mic/amp and LED pins are excluded). Do not reuse the relay pins for IR.
+- Drive the IR LED through a transistor for useful range.
 
-**Amplifier (MAX98357A)**
+---
 
-| MAX98357A | ESP32-S3 |
-|-----------|----------|
-| BCLK | GPIO 5 |
-| LRC | GPIO 7 |
-| DIN | GPIO 8 |
-| VIN / GND | 5V / GND |
-| SD, GAIN | leave unconnected (GAIN floating = 9 dB) |
+## Repository layout
 
-**Relays**
+| File | Description |
+|---|---|
+| `Test_V5_1.ino` | Main sketch: audio, wake word, VAD, STT, matching, command engine, web routes, OTA, NTP, logging |
+| `index_html.h` | Complete web UI (HTML/CSS/JS) as a PROGMEM string |
+| `ir_module.h` | IR capture, storage and transmit + `/api/ir/*` routes |
+| `strip_module.h` | MTTL-W01 TCP controller, telemetry parser + `/api/strip/*` routes |
+| `pwa_assets.h` | PWA manifest, service worker and icons |
+| `audio_clips.h` | Pre-rendered 16 kHz / 16-bit PCM voice replies |
+| `partitions.csv` | Custom partition table (two 4 MB OTA slots, LittleFS, ESP-SR model partition) |
 
-| Relay module | ESP32-S3 |
-|--------------|----------|
-| IN1 | GPIO 1 |
-| IN2 | GPIO 2 |
-| VCC | 3.3V |
-| JD-VCC | 5V from a separate charger (remove the jumper for full isolation) |
-| GND | common ground |
+---
 
-Set `RELAY_ACTIVE_LOW` to `0` in the sketch if your module switches on a HIGH signal.
+## Build & flash
 
-**IR** (defaults; changeable from the web UI): TX = GPIO 4, RX = GPIO 6.
-Allowed pins: `1, 2, 4, 6, 9, 10, 11, 12, 13, 14, 18, 21, 38, 39, 40, 41, 42, 47`.
-Do **not** reuse the relay, mic or amplifier pins for IR. Drive the IR LED through a transistor for useful range.
+**Requirements**
+- Arduino IDE with the **ESP32 Arduino core 3.x** (the code uses `ledcAttach`, `esp_sntp.h`, ESP-SR headers).
+- Libraries: `ArduinoJson` (v6), `WakeOnLan`, plus the core-bundled `WiFi`, `WebServer`, `LittleFS`, `HTTPClient`, `ArduinoOTA`, `Update`.
+- A board with **PSRAM enabled** (OPI PSRAM on N16R8).
 
-## Project files
+**Steps**
+1. Put all files from this repo in one sketch folder (the `.ino` name must match the folder name).
+2. Set **Tools → Partition Scheme → Custom** and use the provided `partitions.csv`:
 
-| File | Purpose |
-|------|---------|
-| `Test_V5_1.ino` | Main firmware: audio, wake word, Wit.ai, command matching/execution, web server, OTA |
-| `index_html.h` | The whole web UI (HTML/CSS/JS) as a PROGMEM string |
-| `ir_module.h` | IR learn/send and its HTTP routes |
-| `strip_module.h` | MTTL-W01 smart-strip controller |
-| `audio_clips.h` | Pre-recorded voice replies (PCM) |
+   | Partition | Size | Use |
+   |---|---|---|
+   | `app0` / `app1` | 4 MB / ~4 MB | OTA application slots |
+   | `spiffs` | 4 MB | LittleFS (commands, IR codes, settings) |
+   | `model` | 4 MB | ESP-SR WakeNet models |
 
-> Keep all files in the same sketch folder. The web UI lives in its own header because the Arduino preprocessor struggles with very long raw strings inside `.ino` files.
+3. Flash the **ESP-SR model** into the `model` partition (WakeNet needs it; the sketch lists available models on the serial console if the chosen wake word is missing).
+4. Edit the [configuration](#configuration) section, then upload.
+5. Open the serial console at 115200 baud, note the IP address, and browse to `http://<ip>/`.
 
-## Setup
-
-### 1. Prerequisites
-
-- Arduino IDE (or arduino-cli) with the **ESP32 Arduino core 3.x** (the code uses the newer `ledcAttach` API and ESP-SR model APIs).
-- Libraries:
-  - `ArduinoJson` (v6)
-  - `WakeOnLan`
-  - `WiFi`, `WebServer`, `LittleFS`, `HTTPClient`, `ArduinoOTA`, `Update` (bundled with the core)
-- A free [Wit.ai](https://wit.ai) app and its **Server Access Token**.
-
-### 2. Board settings
-
-Select your ESP32-S3 board, enable **PSRAM**, and choose a **partition scheme that includes a `model` partition** (needed by ESP-SR) and enough flash for the app and LittleFS. The wake word model must be present in that partition, otherwise the serial log will print `Model partition not found!` or list the available models.
-
-### 3. Configure and flash
-
-1. Edit the settings at the top of `Test_V5_1.ino` (see [Configuration](#configuration)).
-2. Upload over USB the first time.
-3. Open the Serial Monitor at `115200` to see the device IP.
-4. Browse to `http://<device-ip>/`.
+---
 
 ## Configuration
 
-All in `Test_V5_1.ino`:
+Edit the constants near the top of `Test_V5_1.ino`:
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `ssid`, `password` | | Your Wi-Fi |
-| `WIT_AI_TOKEN` | | Wit.ai server access token |
-| `WAKE_WORD` | `"alexa"` | `jarvis`, `alexa`, or `hiesp` |
-| `MIC_SHIFT` | `12` | Wake-word gain: 14 = original, 13 = 2x, 12 = 4x, 11 = 8x |
-| `RECORD_TIME_SECONDS` | `6` | Max recording length (stops earlier on silence) |
-| `VAD_SILENCE_MS` | `700` | Silence that ends a command |
-| `VAD_NO_SPEECH_MS` | `3000` | Give up if nobody speaks |
-| `REC_TARGET_PEAK`, `REC_MAX_GAIN` | `24000`, `400` | Recording normalization |
-| `SPK_VOLUME` | `80` | Speaker volume (0-100) |
-| `RETRY_MAX` | `1` | Extra listen attempts after a failure (0 disables) |
-| `RELAY_ACTIVE_LOW` | `1` | Relay polarity |
-| `STANDBY_LED_MS` | `60000` | Blue standby LED duration after last activity |
-| `OTA_HOSTNAME` | `voice-assistant` | OTA / network name |
-| `OTA_PASSWORD` | `12345678` | **Change this.** OTA and `/update` password (user `admin`) |
+| Setting | Meaning |
+|---|---|
+| `ssid`, `password` | Wi-Fi credentials |
+| `WIT_AI_TOKEN` | Wit.ai server access token |
+| `WAKE_WORD` | `alexa`, `jarvis` or `hiesp` |
+| `OTA_HOSTNAME`, `OTA_PASSWORD` | OTA identity (user is `admin` for `/update`) |
+| `TZ_INFO` | POSIX time-zone string (default: Egypt `EET-2EEST,M4.5.5/0,M10.5.4/24`) |
+| `SPK_VOLUME` | Reply volume 0–100 |
+| `RETRY_MAX` | Automatic re-listen attempts after a failed command (0 disables) |
+| `RELAY_ACTIVE_LOW` | `1` for the usual active-low relay boards |
+| `VAD_*` | Silence length, no-speech timeout, pad, noise multiplier |
+| `MIC_SHIFT`, `REC_TARGET_PEAK`, `REC_MAX_GAIN` | Capture gain/normalisation |
+| `STANDBY_LED_MS` / `STANDBY_LED_BLUE` | Standby LED duration/brightness |
 
-The microphone gain and VAD speech threshold can also be tuned live from the web UI (Maintenance tab) and are saved to flash.
+Microphone gain, VAD minimum level and “record what the device heard” are adjustable at runtime in **Maintenance → Microphone** and persisted in `/mic_cfg.json`.
 
-## Using the web UI
+> The WoL broadcast address defaults to `192.168.1.255` — change it in `setup()` if your subnet differs.
 
-Open `http://<device-ip>/`. Four tabs:
+---
 
-- **الأوامر (Commands)**: create/edit/run/delete commands, grouped by category. A collapsible panel shows the last phrases the device heard, with a **+** button to add a mis-heard phrase to a command.
-- **IR**: choose TX/RX pins, learn new signals, test them, rename or delete saved signals.
-- **المشترك (Strip)**: live status of the smart strip and per-outlet switches with power/energy/temperature.
-- **الصيانة (Maintenance)**: device info, microphone tuning, backup/restore, live Serial Monitor (pause, clear, copy, download), a text box to simulate spoken commands, and a reboot button.
+## Web UI guide
 
-## Commands and steps
+The UI has three top-level tabs. Swipe left/right to move between them — the tabs wrap around (swipe past *Maintenance* to land on *Commands*).
 
-A command is a name, a category, one or more **spoken phrases** (all trigger the same command), and an ordered list of **steps**.
+### Commands
+- **Add/edit form:** name, category, spoken phrases (one per line), and ordered steps. Steps can be reordered with ▲▼ or by dragging the ⠿ handle.
+- **Command list:** grouped by category (collapsible, reorderable, searchable). Each command shows its phrases, a numbered step list, and a copyable `/api/run?id=N` link. ▶ runs it immediately.
+- **Last heard:** the recent transcriptions with ✔/✖ match status. Press ＋ to add a mis-heard phrase to a command.
 
-| Step type | Value format | Example |
-|-----------|--------------|---------|
-| `http` | URL (GET request) | `http://192.168.1.36/TOGGLE` |
-| `wol` | MAC address | `D8:5E:D3:C2:A1:F8` |
-| `ir` | ID of a saved IR signal (chosen from a dropdown in the UI) | `3` |
-| `relay` | `channel:action`, action = `on` / `off` / `toggle` | `1:off`, `2:on` |
-| `strip` | `outlet:action`, outlet `0` = all, `1`-`4` | `2:on`, `0:off` |
-| `delay` | seconds (0.1 to 3600) | `10` |
+### Strip (المشترك)
+Live dashboard for the MTTL-W01: total watts and **total amps**, kWh, number of active outlets, per-outlet watts / **amps** / kWh / temperature, one-tap outlet toggle, master switch, rename outlets (stored in the browser), and a **Refresh** button. The ⚙ panel shows MAC/firmware and a **raw telemetry viewer** for diagnostics.
 
-Stored format (`/commands.json`):
+### Maintenance (الصيانة)
+A scrollable sub-menu; **Log** opens by default.
+
+| Section | Contents |
+|---|---|
+| **Log** | Live Serial Monitor with device timestamps, pause, clear, copy, download, level filter, text filter, and a text-command box to simulate speech |
+| **Device** | IP, Wi-Fi signal, free RAM/PSRAM, uptime, wake word, device clock; PWA install; reboot |
+| **IR** | Learn new signals, saved signals (send/rename/delete), TX/RX pin selection |
+| **Microphone** | Wake-word gain, VAD minimum level, last-recording statistics |
+| **Backup** | Export/import commands + IR codes as JSON |
+
+The UI follows the system dark/light theme (toggle in the header) and is installable as a PWA (Chrome requires a secure origin or the `unsafely-treat-insecure-origin-as-secure` flag for plain HTTP).
+
+---
+
+## Commands, phrases and steps
+
+Stored in `/commands.json` on LittleFS:
 
 ```json
 [
   {
     "id": 1,
-    "name": "Play mode",
+    "name": "PlayMode ON",
     "cat": "Automation",
-    "phrases": ["ابدأ اللعب", "start gaming"],
+    "phrases": ["start gaming", "ابدأ اللعب"],
     "steps": [
-      { "type": "strip", "val": "2:on" },
+      { "type": "strip", "val": "1:on" },
       { "type": "delay", "val": "6.0" },
       { "type": "wol",   "val": "D8:5E:D3:C2:A1:F8" },
-      { "type": "relay", "val": "2:on" },
-      { "type": "relay", "val": "1:off" },
-      { "type": "strip", "val": "1:on" },
-      { "type": "delay", "val": "10.0" },
-      { "type": "ir",    "val": "1" }
+      { "type": "ir",    "val": "3" }
     ]
   }
 ]
 ```
 
-To reorder steps, drag the **⠿** handle or use the **▲ ▼** buttons next to each step, then save.
+| Step type | `val` format | Action |
+|---|---|---|
+| `http` | full URL | HTTP GET (3 s timeout; 2xx/3xx = success) |
+| `wol` | MAC address | Send a Wake-on-LAN magic packet |
+| `ir` | IR signal id | Transmit a learned signal |
+| `relay` | `1:on`, `2:off`, `1:toggle` | Local relay |
+| `strip` | `<outlet>:<on\|off\|toggle>`, outlet `0` = all | MTTL-W01 outlet |
+| `delay` | seconds (0.1 – 3600) | Pause, then continue with the next step |
 
-## How delays work
+**Delays are non-blocking.** A `delay` step parks the remaining steps in a small job queue (4 slots) that `loop()` resumes later, so voice, web and strip traffic keep running. Timing uses `millis()`.
 
-Steps run top to bottom. A `delay` step pauses **only the steps after it**, and the countdown starts the moment the step right before it finishes. It is not measured from the start of the command or from the time you spoke.
+Each step and each resumed delay is logged with a timestamp, for example:
 
-In the example above:
+```
+[06:26:03.412 PM] Step 1/4 [strip] 1:on
+[06:26:03.455 PM] Delay 6.0s then continue from step 3
+[06:26:09.470 PM] Delay finished -> resuming at step 3
+```
 
-1. `strip 2:on` runs immediately.
-2. After 6 s: WOL, relay 2 on, relay 1 off, strip 1 on.
-3. Right after `strip 1:on`, a 10 s timer starts, then the IR signal is sent.
+---
 
-Details:
+## IR module
 
-- Delays are **non-blocking**: the rest of the command is scheduled and the main loop keeps serving the web UI, wake word, etc.
-- Up to **4 delayed commands** can wait at once.
-- A `delay` as the **last** step is ignored.
-- The confirmation voice reply plays after the first segment (before the first delay) finishes.
-- If you trigger the wake word while a delay is pending, the recording takes a few seconds of the main loop and the delayed steps may start slightly late.
+- **Capture:** the receiver pin is sampled by an edge interrupt storing microsecond timestamps; a 40 ms gap ends the frame. Up to 600 edges per signal; noise (< 5 pulses) is ignored and listening continues. Timeout: 15 s.
+- **Storage:** signal metadata in `/ir.json`, raw pulse arrays in `/ir/<id>.bin`, pin choice in `/ir_cfg.json`.
+- **Transmit:** LEDC PWM carrier (30–60 kHz, default 38 kHz, ≈ 33 % duty) with microsecond-accurate mark/space timing and 1–5 repeats.
+- **Workflow:** *Maintenance → IR → Start learning* → press the remote button → *Try* → name and save → use it in a command as an `IR` step.
+- Learned signals are included in backups and re-linked to commands automatically on import.
 
-## Backup and restore
+---
 
-**Maintenance tab → Backup**
+## Power-strip module (MTTL-W01)
 
-- **Export** downloads `voice-hub-backup-YYYY-MM-DD.json` containing all commands (phrases, steps, order) **and all learned IR signals** (raw pulses).
-- **Import** can either **replace** everything or **add** to what exists. IR signals are re-created first and the IR steps inside commands are automatically re-mapped to the new signal IDs.
-- Older exports that contain only commands still import fine.
+The ESP32 acts as the **controller**: the strip connects *to the ESP32* over TCP port **10086** (the same role the Windows “MTTL Control” app normally plays).
 
-Make a backup before OTA updates and before clearing flash.
+**One-time setup:** in the MTTL Control app go to *Device setup* and enter the **ESP32’s IP address** (shown in the Strip tab) with port 10086 instead of the PC’s IP.
 
-## IR learning
+Protocol notes (plain UTF-8 lines ending in `\r\n`):
 
-1. IR tab → pick TX and RX GPIOs → save.
-2. Press **Start learning**, point the remote at the receiver, press one button (15 s timeout).
-3. Test it with **▶**, set carrier (36/38/40/56 kHz) and repeat count, name it, save.
-4. Use it as an `ir` step in any command.
+| Direction | Message |
+|---|---|
+| Strip → ESP32 | `up:bootinfo:<model>;<mac>;<mac>;<fw>;connect` (handshake) |
+| ESP32 → Strip | `up:getinfo:all` (polled every 10 s) |
+| Strip → ESP32 | `up:getinfo:1:<rec>:2:<rec>:3:<rec>:4:<rec>` |
+| ESP32 → Strip | `up:onoff:<0-4>:<on\|off>` (0 = master) |
+| ESP32 → Strip | `up:power_report:1:vol` (line voltage, polled with telemetry) |
 
-Signals are stored raw (pulse durations) so almost any remote works. Max length is 600 edges per signal.
+Each outlet record has 12 `;`-separated fields; the parser uses: `F1` relay state, `F3/F4` over-voltage/over-temperature OK flags, `F5` power in mW, `F6` cumulative energy in Wh (hex), `F10` event flags (hex), `F11` temperature °C.
 
-## Smart power strip (MTTL-W01)
+Behaviour:
+- New connections are accepted only after a valid `bootinfo`; a newer valid connection replaces an older one.
+- A session with no data for 45 s is dropped.
+- **Current (A)** is computed as `W ÷ V`, using the reported line voltage (falls back to 220 V and is marked `≈` if unavailable). It is derived from *real* power, so it under-reads on loads with a low power factor.
+- The Strip tab’s *raw telemetry* viewer prints every field per outlet — useful for checking whether a given outlet has a metering channel.
 
-The ESP32 acts as the **controller** for an MTTL-W01 strip. In the vendor's **MTTL Control** app go to *Device setup* and enter the IP shown on the Strip tab (port `10086`). The tab then shows connection state, MAC, firmware version and, per outlet, watts, kWh and temperature, with on/off controls and "all on / all off".
+---
 
-## OTA updates
+## Time & timestamps
 
-> The `.h` files are part of the firmware. After changing any of them, rebuild the sketch and upload again.
+- On Wi-Fi connect the device starts SNTP (`pool.ntp.org`, `time.google.com`, `time.cloudflare.com`) with the configured `TZ_INFO`. No blocking wait.
+- Every log line is prefixed by the **device** with `[hh:mm:ss.mmm AM/PM]` — both on the USB serial port and in the web Serial Monitor. Previously the browser stamped lines on arrival, so bursts looked simultaneous.
+- Until the clock is set, lines use device uptime: `[+hh:mm:ss.mmm]`.
+- **Fallback:** if NTP is unreachable (e.g., no internet), the web page pushes the phone’s time to the device (`POST /api/time`).
+- Change `TZ_INFO` for other regions (e.g. `UTC0`, `CET-1CEST,M3.5.0,M10.5.0/3`).
 
-- **Arduino IDE:** the device appears under *Tools → Port → Network ports* as `voice-assistant`. Upload as usual and enter the OTA password.
-- **Browser:** *Sketch → Export Compiled Binary*, then open `http://<device-ip>/update`, log in (`admin` / your `OTA_PASSWORD`) and upload the app `.bin` (not the bootloader or partitions file). The device reboots by itself.
+---
 
-Saved commands and IR signals live in LittleFS and survive OTA updates.
+## HTTP API reference
 
-## HTTP API
+All endpoints are served on port 80. POST bodies are `application/x-www-form-urlencoded` unless noted.
 
-The UI is a thin client over these endpoints. Useful for scripting or integrating with other systems.
+**Commands & voice**
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
+| Method | Path | Notes |
+|---|---|---|
 | GET | `/api/commands` | All commands (JSON) |
-| POST | `/api/save` | Create/update a command (JSON body, `id: 0` = new) |
-| POST | `/api/delete` | Delete by `id` |
-| GET / POST | `/api/run?id=N` | Run a command by `id` (the web UI shows a copyable link under each command, for HTTP Shortcuts) |
+| POST | `/api/save` | JSON body `{id, name, cat, phrases[], steps[{type,val}]}`; `id: 0` creates |
+| POST | `/api/delete` | `id` |
+| GET/POST | `/api/run?id=N` | Run a command (works from shortcut apps) |
 | POST | `/api/clear` | Delete all commands |
-| POST | `/api/say` | Simulate a spoken sentence: `text=...` |
-| GET/POST | `/api/relay` | `?n=1&s=on\|off\|toggle` (no `s` returns state) |
-| GET | `/api/ir/cfg`, POST | Get / set IR pins |
-| POST | `/api/ir/learn`, GET `/api/ir/status` | Start learning / poll result |
-| GET | `/api/ir/list` | Saved IR signals (metadata) |
-| POST | `/api/ir/save`, `/api/ir/send`, `/api/ir/delete` | Save, send, delete |
-| GET | `/api/ir/raw?id=` | Raw pulses of a signal (backup) |
-| POST | `/api/ir/import?name=&khz=&rep=` | Create a signal from comma-separated pulses in the body |
-| GET | `/api/strip/status` | Smart strip state |
-| POST | `/api/strip/set`, `/api/strip/refresh` | Switch outlet(s) / refresh readings |
-| GET/POST | `/api/mic` | Mic gain and VAD level |
-| GET/POST | `/api/heard/cfg`, GET `/api/heard`, POST `/api/heard/clear` | "Heard" log |
-| GET | `/api/log?since=` , POST `/api/log/clear` | Serial log buffer |
-| GET | `/api/info` | IP, RSSI, heap, PSRAM, uptime, wake word |
+| POST | `/api/say` | `text` — simulate a spoken phrase |
+| GET | `/api/heard` · POST `/api/heard/clear` | Recent transcriptions |
+| GET/POST | `/api/heard/cfg` | Enable/disable transcription logging (`on`) |
+| GET/POST | `/api/mic` | `g` (wake gain 2–128), `v` (VAD min level 2–60) |
+
+**Device**
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/info` | IP, RSSI, heap, PSRAM, uptime, wake word, `sync`, `now` |
+| GET/POST | `/api/time` | Read device time / set it with `ts` (epoch seconds; ignored if already synced unless `force=1`) |
+| GET | `/api/log?since=N` | Incremental log (next offset in `X-Next` header) |
+| POST | `/api/log/clear` | Clear log |
 | POST | `/api/reboot` | Restart |
-| GET/POST | `/update` | Browser OTA (basic auth) |
+| GET/POST | `/api/relay?n=1&s=on\|off\|toggle` | Relay control / state |
+| GET/POST | `/update` | Browser OTA (basic auth `admin` / `OTA_PASSWORD`) |
+
+**IR**
+
+| Method | Path | Notes |
+|---|---|---|
+| GET/POST | `/api/ir/cfg` | TX/RX pins |
+| POST | `/api/ir/learn` | Start capture |
+| GET | `/api/ir/status` | `idle / waiting / captured / timeout` |
+| GET | `/api/ir/list` | Saved signals |
+| POST | `/api/ir/save` | `id=0` stores the captured signal; `id>0` edits name/kHz/repeat |
+| POST | `/api/ir/send` | `id`, or `pending=1&khz=&rep=` to test before saving |
+| POST | `/api/ir/delete` | `id` |
+| GET | `/api/ir/raw?id=N` | Raw pulses (comma-separated) |
+| POST | `/api/ir/import?name=&khz=&rep=` | Body = pulses (text/plain) |
+
+**Power strip**
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/api/strip/status` | Connection, per-outlet W / Wh / °C / state, line voltage `v` |
+| POST | `/api/strip/set` | `n` (0–4), `s` (`on/off/toggle`) |
+| POST | `/api/strip/refresh` | Request fresh telemetry |
+| GET | `/api/strip/raw` | Last raw telemetry frame |
+
+**PWA:** `/manifest.webmanifest`, `/sw.js`, `/icon-192.png`, `/icon-512.png`.
+
+---
+
+## Updating firmware (OTA)
+
+- **Arduino IDE:** *Tools → Port → Network ports* (`voice-assistant`), password = `OTA_PASSWORD`.
+- **Browser:** open `http://<ip>/update`, sign in as `admin`, upload the compiled `.bin`. The LED turns orange during the update and the device reboots when done.
+
+---
 
 ## Troubleshooting
 
-| Symptom | What to check |
-|---------|---------------|
-| `Model partition not found!` | Use a partition scheme with a `model` partition and flash the WakeNet model |
-| `Wake word model not found!` | The serial log lists available models; set `WAKE_WORD` to one of them |
-| Doesn't wake from a distance | Increase wake gain (`MIC_SHIFT` 12 → 11) or raise the mic gain in the Maintenance tab |
-| Cuts off your sentence / ignores quiet speech | Lower "minimum speech level" in the Maintenance tab; raise `VAD_SILENCE_MS` |
-| "No network" voice reply | Wi-Fi or Wit.ai problem, check the token and internet access |
-| Phrase not matched | Open "last things the device heard" and add the exact transcription with **+** |
-| Relays are inverted | Toggle `RELAY_ACTIVE_LOW` |
-| IR does nothing | Check TX pin choice, use a transistor, raise the repeat count, re-learn the signal |
-| Network port not visible for OTA | Same network/subnet, restart the IDE, check firewall (mDNS/UDP) |
+| Symptom | Things to check |
+|---|---|
+| Wake word never triggers | Raise *Microphone → wake gain*; confirm the `model` partition was flashed; check the serial output for `Using model:` |
+| Cuts off the end of sentences / misses quiet speech | Lower the VAD minimum level; adjust `VAD_SILENCE_MS` |
+| “Didn’t understand” on correct speech | Open *Last heard* — add the actual transcription as a phrase |
+| Strip shows *Offline* | Re-enter the ESP32’s IP in MTTL Control → Device setup; the strip must reach port 10086 |
+| Strip outlet reads 0 W with a load | Open the raw telemetry viewer; if F5/F6/F7 are all `0` for that outlet it has no metering channel (or the load is below the meter’s resolution) |
+| Amps shown with `≈` | Line-voltage reply wasn’t received; check the log for `Strip volt: unexpected reply` |
+| Log times look wrong | Open *Maintenance → Device* and check the `Time` chip; ⚠ means the clock isn’t synced |
+| IR doesn’t control a device | Use a transistor on the LED, check the carrier (try 36/40/56 kHz), and increase repeats |
+| Can’t install as PWA over HTTP | Chrome flag `chrome://flags/#unsafely-treat-insecure-origin-as-secure` with `http://<ip>` |
+
+---
 
 ## Security notes
 
-- **Never commit your real Wi-Fi password, Wit.ai token, or OTA password.** Keep placeholders in the repository (for example in a `secrets.h` that is listed in `.gitignore`). If a token was ever committed, **revoke it in Wit.ai and generate a new one**.
-- The web UI and `/api/*` endpoints have **no authentication**. Only expose the device on a trusted LAN, never port-forward it to the internet.
-- Change the default `OTA_PASSWORD`.
-- Relays may switch mains-powered loads. Use properly rated, isolated modules and enclosures, and take care with mains wiring.
+- **Do not commit real secrets.** Replace `ssid`, `password`, `WIT_AI_TOKEN` and `OTA_PASSWORD` with placeholders (or move them to an untracked header) before publishing.
+- The web UI and `/api/*` endpoints have **no authentication** — only `/update` is password-protected. Run the device on a trusted LAN and do not expose port 80 to the internet.
+- The default `OTA_PASSWORD` is a placeholder; change it.
+- The Wit.ai audio upload uses HTTPS with certificate verification disabled (`setInsecure()`); pin a certificate if that matters for your threat model.
+
+---
 
 ## Credits
 
-- [Espressif ESP-SR / WakeNet](https://github.com/espressif/esp-sr)
-- [Wit.ai](https://wit.ai) speech API
-- [ArduinoJson](https://arduinojson.org), [WakeOnLan](https://github.com/a7md0/WakeOnLan-ESP32)
+- [ESP-SR / WakeNet](https://github.com/espressif/esp-sr) — wake-word engine
+- [ArduinoJson](https://arduinojson.org/), [WakeOnLan](https://github.com/a7md0/WakeOnLan)
+- MTTL-W01 protocol notes from the community MTTL Control app and strip’s own bootinfo/telemetry traffic
 
 ## License
 
-Add the license of your choice (for example MIT) as a `LICENSE` file.
+Add a license of your choice (e.g. MIT) as `LICENSE`.
